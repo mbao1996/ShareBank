@@ -46,8 +46,8 @@ for i in range( len(ShareBank) ):
         ws.cell(xl_row, col_name).value = s.name
         ws.cell(xl_row, col_price).value = s.price
 #        ws.cell(xl_row, col_div_ratio).value = s.cp['stk_div_ratio']
-        val = s.rt['avg_div_rate'] * s.rt['EPS_ttm'] / s.price
-        ws.cell(xl_row, col_exp_div_ratio).value = round(val, 4)
+#        val = s.rt['avg_div_rate'] * s.rt['EPS_ttm'] / s.price
+#        ws.cell(xl_row, col_exp_div_ratio).value = round(val, 4)
         ws.cell(xl_row, col_adjust).value = s.rt['convert_rate']
         ws.cell(xl_row, col_last_div).value = s.rt['last_year_div']
 #        ws.cell(xl_row, col_safe_div).value = s.cp['hope_div']
@@ -66,6 +66,9 @@ for i in range( len(ShareBank) ):
         if( my_flag in s.flag ):
             if( s.flag[my_flag] == 'Y' ):
                 ws.cell(xl_row, col_flag).value = 'Du'
+        if( my_flag in s.flag and hd_flag in s.flag ):
+            if( s.flag[my_flag] == 'Y' and s.flag[hd_flag] == 'Y' ):
+                ws.cell(xl_row, col_flag).value = 'Att'
         ws.cell(xl_row, col_last_dividend).value = s.dt['dividend'][1]
         ws.cell(xl_row, col_EPS_ttm).value = s.rt['EPS_ttm']
 

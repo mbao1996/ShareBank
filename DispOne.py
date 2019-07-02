@@ -5,8 +5,8 @@ from lib import *
 fn = work_catalog + bank_name
 ShareBank = read_data(fn)
 
-code = ''
-flag = 'holding'
+code = '600660'
+flag = ''
 count = 0
 
 for i in range( len(ShareBank) ):

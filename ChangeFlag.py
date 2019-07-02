@@ -7,7 +7,7 @@ ShareBank = read_data(fn)
 
 flag_before = 'no'
 flag_after = 'holding'
-to_add = ['', 'holding']
+to_add = ['600177', 'goodu']
 to_del = ['002110', 'holding']
 
 count = 0

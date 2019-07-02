@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#coding=gbk
+
 import time
 from define import *
 from lib import *
