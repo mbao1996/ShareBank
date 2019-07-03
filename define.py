@@ -9,7 +9,7 @@ bank_name = "\ShareBank.dat"
 TOKEN = 'c27f964551786735a0cebbc26a743d0e18b06e9181f2166632964e37'
 url_quotation_before = "http://hq.sinajs.cn/list="
 
-######################################################
+#######################################################
 #    dt['convert']                  转送股
 #    dt['current_ratio']            流动比率
 #    dt['dividend']                 历年分红
