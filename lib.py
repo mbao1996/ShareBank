@@ -168,6 +168,7 @@ def get_last_qtr():
         iQtr = str(this_year) + Quarter[i]
         if( int(iQtr) <= int(get_today()) ):
             last_quarter = iQtr
+        else:
             break
     return(last_quarter)
 def get_last5qtrs():
@@ -287,6 +288,24 @@ def calc_stk_div_ratio(price, dividend, convert_rate):     # 当前股息率
     else:
         rt = None
     return(rt)
+def get_forecast(code, pro):
+    s_date = get_last_qtr()[0:6] + '01'
+    df = pro.forecast(ts_code=get_t_s_id(code), start_date=s_date, end_date=get_today(), fields='type, end_date, p_change_min, p_change_max, net_profit_min, net_profit_max')
+    for dfr in df.iterrows():
+        dt = dfr[1]
+        print('--- start: ', s_date, ' ## ', end='')
+        if( len(dt) != 0 ):
+            print(dt)
+        print('[]')
+def get_express(code, pro):
+    s_date = get_last_qtr()[0:6] + '01'
+    df = pro.express(ts_code=get_t_s_id(code), start_date=s_date, end_date=get_today(), fields='ann_date, end_date, n_income, diluted_eps, yoy_tp, yoy_eps')
+    for dfr in df.iterrows():
+        dt = dfr[1]
+        print('--- start: ', s_date, ' ## ', end='')
+        if( len(dt) != 0 ):
+            print(dt)
+        print('[]')
 
 class Share():
     df_stock_basic = None
@@ -435,3 +454,10 @@ class Share():
         else:
             self.cp['safe_div'] = 9.99           # 保底分红率 = 期望保底分红 /EPS_TTM
         self.cp['div_status'] = calc_div_status(self.cp['safe_div'], self.rt['avg_div_rate'])
+    def forecast(self,cls):
+        get_forecast(self.id, cls.pro)
+    def express(self,cls):
+        get_forecast(self.id, cls.pro)
+        
+        
+        
