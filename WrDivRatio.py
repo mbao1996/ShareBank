@@ -30,7 +30,11 @@ col_EPS_ttm = col_last_dividend + 1
 col_grade = col_EPS_ttm + 1
 
 ShareBank = read_data(fn)
-wb = load_workbook(fn_wr,keep_vba=True)
+try:
+    wb = load_workbook(fn_wr,keep_vba=True)
+except Exception as e:
+    print(str(e))
+    os._exit(0)
 ws = wb['Sheet1']
 
 my_flag = 'goodu'
@@ -77,5 +81,9 @@ for i in range( len(ShareBank) ):
             ws.cell(xl_row, col_grade).value = -1
 
         xl_row += 1
-wb.save(fn_wr)
+try:
+    wb.save(fn_wr)
+except Exception as e:
+    print(str(e))
+    os._exit(0)
 print('\n finished')
