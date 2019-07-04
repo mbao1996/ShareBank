@@ -24,10 +24,10 @@ col_qtr_acc = col_div_up + 1
 col_current_ratio = col_qtr_acc + 1
 col_gold_incl = col_current_ratio + 1
 col_industry = col_gold_incl + 1
-col_div_fine = col_industry + 1
-col_flag = col_div_fine + 1
+col_flag = col_industry + 1
 col_last_dividend = col_flag + 1
 col_EPS_ttm = col_last_dividend + 1
+col_grade = col_EPS_ttm + 1
 
 ShareBank = read_data(fn)
 wb = load_workbook(fn_wr,keep_vba=True)
@@ -35,6 +35,7 @@ ws = wb['Sheet1']
 
 my_flag = 'goodu'
 hd_flag = 'holding'
+gd_flag = 'grade'
 
 xl_row = row_start
 
@@ -59,7 +60,6 @@ for i in range( len(ShareBank) ):
         ws.cell(xl_row, col_gold_incl).value = s.rt['gold_include']
         if( 'industry' in s.dt ):
             ws.cell(xl_row, col_industry).value = s.dt['industry']
-        ws.cell(xl_row, col_div_fine).value = s.cp['div_status']
         if( hd_flag in s.flag ):
             if( s.flag[hd_flag] == 'Y' ):
                 ws.cell(xl_row, col_flag).value = 'H'
@@ -71,8 +71,11 @@ for i in range( len(ShareBank) ):
                 ws.cell(xl_row, col_flag).value = 'Att'
         ws.cell(xl_row, col_last_dividend).value = s.dt['dividend'][1]
         ws.cell(xl_row, col_EPS_ttm).value = s.rt['EPS_ttm']
+        if( gd_flag in s.flag ):
+            ws.cell(xl_row, col_grade).value = s.flag[gd_flag]
+        else: 
+            ws.cell(xl_row, col_grade).value = -1
 
         xl_row += 1
-       
 wb.save(fn_wr)
 print('\n finished')
