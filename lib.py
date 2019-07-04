@@ -265,7 +265,7 @@ def calc_avg_div_rates(div_rate):                   # 计算5年平均分红率
     rt = 0
     yr = 5
     for i in range(1, 6):
-        if( div_rate[i] < 1 and div_rate[i] >= 0 ):
+        if( div_rate[i] <= 1 and div_rate[i] >= 0 ):
             rt += div_rate[i]
         else:
             yr -= 1
@@ -293,7 +293,7 @@ def get_forecast(code, pro):
     df = pro.forecast(ts_code=get_t_s_id(code), start_date=s_date, end_date=get_today(), fields='type, end_date, p_change_min, p_change_max, net_profit_min, net_profit_max')
     for dfr in df.iterrows():
         dt = dfr[1]
-        print('--- start: ', s_date, ' ## ', end='')
+        print('--- start : ', s_date, ' ## ', end='')
         if( len(dt) != 0 ):
             print(dt)
         print('[]')
