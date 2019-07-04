@@ -6,13 +6,30 @@ from define import *
 from lib import *
 
 fn = work_catalog + bank_name 
-
 fn_wr = work_catalog + '\DivRatio.xlsm'
+print('   ***   tushare_version: ', tushare.__version__, '   ***\n')
 
-print('tushare_version: ', tushare.__version__)
-
+ts.set_token(TOKEN)
+pro = ts.pro_api()
+mode = 'query'
+para = []
+para.append('600036.SH')
+para.append('20181231')
+print(para)
+df = req_tushare(pro, mode, para)
+if( len(df) != 0 ):
+    for dfr in df.iterrows():
+        dt = dfr[1]
+        print(dt)
+else:
+    print('no return')
+'''
 ShareBank = read_data(fn)
-wb = load_workbook(fn_wr,keep_vba=True)
+try:
+    wb = load_workbook(fn_wr,keep_vba=True)
+except Exception as e:
+    print(str(e))
+    os._exit(0)
 ws = wb['Sheet1']
 
 my_flag = 'goodu'
@@ -41,4 +58,5 @@ for i in range( len(ShareBank) ):
                     time.sleep(3)
                 print('')
 #wb.save(fn_wr)
+'''
 print('\n finished')

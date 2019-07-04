@@ -9,7 +9,6 @@ import tushare as ts
 from urllib.request import urlopen
 from urllib.request import Request
 from define import *
-from tushare.stock.macro_vars import GOLD_AND_FOREIGN_CURRENCY_RESERVES
 
 def read_data(fn):
     data = []
@@ -110,6 +109,17 @@ def get_today():
     today=datetime.date.today()
     formatted_today=today.strftime('%Y%m%d')
     return( formatted_today )
+def req_tushare(pro, mode, para):
+    if( mode == 'query'):
+        try:
+            df = pro.query('fina_indicator', ts_code=para[0], period=para[1])
+        except Exception as e:
+            print(str(e))
+            os._exit(0)
+    else:
+        df = None
+        print('mode:', mode, ' not exist.')
+    return(df)
 def dividend_one_year(df, year):
     dqexe = []
     dqplan = []
