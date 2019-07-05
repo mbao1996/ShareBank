@@ -17,10 +17,10 @@ para.append('600036.SH')
 para.append('20181231')
 print(para)
 df = req_tushare(pro, mode, para)
+print('+++++', len(df))
 if( len(df) != 0 ):
-    for dfr in df.iterrows():
-        dt = dfr[1]
-        print(dt)
+    print(df['end_date'][0])
+    print(df.iloc[0]['ann_date'])
 else:
     print('no return')
 '''
