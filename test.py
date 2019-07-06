@@ -9,6 +9,19 @@ fn = work_catalog + bank_name
 fn_wr = work_catalog + '\DivRatio.xlsm'
 print('   ***   tushare_version: ', tushare.__version__, '   ***\n')
 
+ShareBank = read_data(fn)
+
+s = ShareBank[8]
+s.profit_dedt(s)
+rd = RawData()
+#rd.reset()
+print('==================')
+s = ShareBank[8]
+s.profit_dedt(s)
+
+
+
+'''
 ts.set_token(TOKEN)
 pro = ts.pro_api()
 mode = 'query'
@@ -23,7 +36,7 @@ if( len(df) != 0 ):
     print(df.iloc[0]['ann_date'])
 else:
     print('no return')
-'''
+
 ShareBank = read_data(fn)
 try:
     wb = load_workbook(fn_wr,keep_vba=True)

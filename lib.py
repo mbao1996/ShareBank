@@ -5,6 +5,7 @@ import re
 import os
 import datetime
 import time
+import pandas as pd
 import tushare as ts
 from urllib.request import urlopen
 from urllib.request import Request
@@ -109,6 +110,11 @@ def get_today():
     today=datetime.date.today()
     formatted_today=today.strftime('%Y%m%d')
     return( formatted_today )
+def get_last_x_years(x):
+    years = []
+    for i in range(x):
+        years.append(str(int(get_today()[0:4]) - 1 - i) + '1231')
+    return(years)
 def req_tushare(pro, mode, para):
     if( mode == 'query'):
         try:
@@ -225,8 +231,8 @@ def eps_these_quarters(code, pro):            # 这些季度的每股收益
 def fina_indicator(code, pro):           	  # 准备利润增速数据   每股经营活动产生的现金流量净额 和 流动比率
     last5qtrs = get_last5qtrs()
     # 准备利润增速数据
-    pft = []
-    rt = {}
+    pft=[]
+    rt={}
     df = pro.query('fina_indicator', ts_code=get_t_s_id(code), start_date=last5qtrs[4], end_date=get_today())
     for dfr in df.iterrows():
         dt = dfr[1]
@@ -316,6 +322,14 @@ def get_express(code, pro):
         if( len(dt) != 0 ):
             print(dt)
         print('[]')
+def profit_dedt_last_five_years(code, years):
+    profit_dedt = []
+    profit_dedt.append(years[0])
+    for i in range(len(years)):
+        rd = RawData()
+        df = rd.req_tushare_query(code, years[i])
+        profit_dedt.append(df.iloc[0]['profit_dedt'])
+    return(profit_dedt)        
 
 class Share():
     df_stock_basic = None
@@ -323,7 +337,6 @@ class Share():
     today = get_today()
     ts.set_token(TOKEN)
     pro = ts.pro_api()
-    
     def __init__(self):
         self.id = ''
         self.name =''
@@ -332,7 +345,6 @@ class Share():
         self.dt = {}          # 原始数据
         self.rt = {}          # 计算结果
         self.cp = {}          # 与price相关的计算结果
-        
     @classmethod
     def stock_basic_df(cls):
         if( not cls.has_stock_basic ):
@@ -364,9 +376,7 @@ class Share():
                     if( not is_pseudo_number(dq_div[0][i]) ):
                         self.dt['convert'][i] = dq_div[0][i]
     def last_five_years_EPS(self,cls):
-        year = []
-        for i in range(5):
-            year.append(str(int(cls.today[0:4]) - 1 - i) + '1231')
+        year = get_last_x_years(5)
         epss = eps_these_years(self.id, cls.pro, year)
         self.dt['EPS'] = epss
     def calc_lfy_div_rate(self):         # 类内计算 --- 计算5年分红率
@@ -468,6 +478,34 @@ class Share():
         get_forecast(self.id, cls.pro)
     def express(self,cls):
         get_forecast(self.id, cls.pro)
-        
-        
-        
+    def profit_dedt(self,cls):
+        years = get_last_x_years(5)
+        profit_dedt = profit_dedt_last_five_years(self.id, years)
+        self.dt['profit_dedt_years'] = profit_dedt
+        print(profit_dedt)
+class RawData():
+    ts.set_token(TOKEN)
+    pro = ts.pro_api()
+    df_query = pd.DataFrame()
+    @classmethod
+    def reset(cls):
+        cls.df_query = pd.DataFrame()
+    @classmethod    
+    def req_tushare_query(cls, code, period):
+        get = False
+        if(cls.df_query.shape[0] != 0):
+            for i in range(cls.df_query.shape[0]):
+                if( cls.df_query.iloc[i]['end_date'] == period ):
+                    df = cls.df_query.iloc[[i]]
+                    print('-smart work-')
+                    get = True
+                    break
+        if( get == False ):
+            mode = 'query'
+            para = []
+            para.append(get_t_s_id(code))
+            para.append(period)
+            df = req_tushare(cls.pro, mode, para)
+            cls.df_query = cls.df_query.append(df, ignore_index=True)
+            print('req')
+        return(df)
