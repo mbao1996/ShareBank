@@ -10,6 +10,8 @@ import tushare as ts
 from urllib.request import urlopen
 from urllib.request import Request
 from define import *
+my_flag = 'goodu'
+hd_flag = 'holding'
 
 def read_data(fn):
     data = []
@@ -330,7 +332,29 @@ def profit_dedt_last_five_years(code, years):
         df = rd.req_tushare_query(code, years[i])
         profit_dedt.append(df.iloc[0]['profit_dedt'])
     return(profit_dedt)        
-
+def pft_3_years_increase(s):
+    rt = ''
+    if( 'profit_dedt_years' in s.dt ):
+        if(s.dt['profit_dedt_years'][1] < 0):
+            rt = u'亏损'
+        elif(s.dt['profit_dedt_years'][4] <= 0):
+            rt = u'亏转盈'
+        else:
+            rt = (s.dt['profit_dedt_years'][1] / s.dt['profit_dedt_years'][4])**(1/3) - 1
+            rt = round(rt, 3)
+    return(rt)
+def fill_flag(s):
+    flag = ''
+    if( hd_flag in s.flag ):
+        if( s.flag[hd_flag] == 'Y' ):
+            flag = 'H'
+    if( my_flag in s.flag ):
+        if( s.flag[my_flag] == 'Y' ):
+            flag = 'Du'
+    if( my_flag in s.flag and hd_flag in s.flag ):
+        if( s.flag[my_flag] == 'Y' and s.flag[hd_flag] == 'Y' ):
+            flag = 'Att'
+    return(flag)
 class Share():
     df_stock_basic = None
     has_stock_basic = False
@@ -482,7 +506,6 @@ class Share():
         years = get_last_x_years(5)
         profit_dedt = profit_dedt_last_five_years(self.id, years)
         self.dt['profit_dedt_years'] = profit_dedt
-        print(profit_dedt)
 class RawData():
     ts.set_token(TOKEN)
     pro = ts.pro_api()
@@ -497,8 +520,9 @@ class RawData():
             for i in range(cls.df_query.shape[0]):
                 if( cls.df_query.iloc[i]['end_date'] == period ):
                     df = cls.df_query.iloc[[i]]
-                    print('-smart work-')
                     get = True
+                    # sleep
+                    time.sleep(2)
                     break
         if( get == False ):
             mode = 'query'
@@ -507,5 +531,4 @@ class RawData():
             para.append(period)
             df = req_tushare(cls.pro, mode, para)
             cls.df_query = cls.df_query.append(df, ignore_index=True)
-            print('req')
         return(df)

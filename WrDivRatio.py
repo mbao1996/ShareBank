@@ -21,7 +21,8 @@ col_safe_div_r = col_safe_div + 1
 col_agv_div_r = col_safe_div_r + 1
 col_div_up = col_agv_div_r + 1
 col_qtr_acc = col_div_up + 1
-col_current_ratio = col_qtr_acc + 1
+col_pft_3years_inc = col_qtr_acc + 1
+col_current_ratio = col_pft_3years_inc + 1
 col_gold_incl = col_current_ratio + 1
 col_industry = col_gold_incl + 1
 col_flag = col_industry + 1
@@ -37,8 +38,6 @@ except Exception as e:
     os._exit(0)
 ws = wb['Sheet1']
 
-my_flag = 'goodu'
-hd_flag = 'holding'
 gd_flag = 'grade'
 
 xl_row = row_start
@@ -60,19 +59,12 @@ for i in range( len(ShareBank) ):
         ws.cell(xl_row, col_agv_div_r).value = s.rt['avg_div_rate']
         ws.cell(xl_row, col_div_up).value = s.rt['income_up']
         ws.cell(xl_row, col_qtr_acc).value = s.rt['profit_dedt_acc']
+        ws.cell(xl_row, col_pft_3years_inc).value = pft_3_years_increase(s)
         ws.cell(xl_row, col_current_ratio).value = s.dt['current_ratio']
         ws.cell(xl_row, col_gold_incl).value = s.rt['gold_include']
         if( 'industry' in s.dt ):
             ws.cell(xl_row, col_industry).value = s.dt['industry']
-        if( hd_flag in s.flag ):
-            if( s.flag[hd_flag] == 'Y' ):
-                ws.cell(xl_row, col_flag).value = 'H'
-        if( my_flag in s.flag ):
-            if( s.flag[my_flag] == 'Y' ):
-                ws.cell(xl_row, col_flag).value = 'Du'
-        if( my_flag in s.flag and hd_flag in s.flag ):
-            if( s.flag[my_flag] == 'Y' and s.flag[hd_flag] == 'Y' ):
-                ws.cell(xl_row, col_flag).value = 'Att'
+        ws.cell(xl_row, col_flag).value = fill_flag(s)
         ws.cell(xl_row, col_last_dividend).value = s.dt['dividend'][1]
         ws.cell(xl_row, col_EPS_ttm).value = s.rt['EPS_ttm']
         if( gd_flag in s.flag ):
