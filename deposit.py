@@ -11,6 +11,8 @@ row_start = 0     # adjustable
 
 for i in range(row_start, len(ShareBank)):
     s = ShareBank[i]
+    rd = RowData()
+    rd.reset()
     if( flag in s.flag ):
         s.name_price_fill()
         s.calc_cp()
