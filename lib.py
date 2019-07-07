@@ -179,19 +179,17 @@ def dividends_for_stock(code, pro, today):                   # get last 6 years
                 else:
                     print(u'---有转送!---')
     return(Ddd, dqdiv)
-def get_last_qtr():
-    this_year = int(get_today()[0:4])
-    last_quarter = str(this_year-1) + Quarter[3]
+def last_qtr(data_from):
+    last_year = int(data_from[0:4]) -1 
+    last_quarter = str(last_year) + Quarter[3]
     for i in range(4):
-        iQtr = str(this_year) + Quarter[i]
-        if( int(iQtr) <= int(get_today()) ):
+        iQtr = data_from[0:4] + Quarter[i]
+        if( int(iQtr) <= int(data_from) ):
             last_quarter = iQtr
-        else:
-            break
     return(last_quarter)
 def get_last5qtrs():
     last5qtrs = []
-    last5qtrs.append(get_last_qtr())
+    last5qtrs.append(last_qtr(get_today()))
     for i in range(4):
         for j in range(4):
             if( last5qtrs[i][4:8] == Quarter[j]): 
@@ -203,56 +201,73 @@ def get_last5qtrs():
                     x = str(x) + Quarter[j-1]
                 last5qtrs.append(x)    
     return(last5qtrs)
-def eps_these_years(code, pro, year):              # 这些年的每股收益
+def last_eight_qtrs(data_from):
+    last8qtrs = []
+    last8qtrs.append(last_qtr(data_from))
+    for i in range(7):
+        for j in range(4):
+            if( last8qtrs[i][4:8] == Quarter[j]): 
+                if( j == 0 ):
+                    x = int(str(last8qtrs[i][0:4])) - 1
+                    x = str(x) + Quarter[3]
+                else:
+                    x = int(str(last8qtrs[i][0:4]))
+                    x = str(x) + Quarter[j-1]
+                last8qtrs.append(x)    
+    return(last8qtrs)
+def eps_these_years(code, year):              # 这些年的每股收益
     epss = []
     epss.append(year[0])
+    rd = RawData()
     for i in range(len(year)):
-        df = pro.query('fina_indicator', ts_code=get_t_s_id(code), period=year[i])
+        df = rd.req_tushare_query(code, year[i])
         if(len(df) == 0):
             epss.append('None')
         else:
-            for dfr in df.iterrows():
-                dt = dfr[1]
-                epss.append(dt['eps'])
-    return(epss)
-def eps_these_quarters(code, pro):            # 这些季度的每股收益
-    last5qtrs = get_last5qtrs()
-    EPSs = [last5qtrs[0]]   
-    for i in range(len(last5qtrs)):
-        df = pro.query('fina_indicator', ts_code=get_t_s_id(code), period=last5qtrs[i])
-        if(len(df) == 0):
-            EPSs.append(0.0)
-        else:
-            for dfr in df.iterrows():
-                dt = dfr[1]
-                if(not is_pseudo_number(dt['eps'])):
-                    EPSs.append(dt['eps'])
-                else:
-                    EPSs.append(0.0)
+            epss.append(df.iloc[0]['eps'])
+    return(epss)        
+def eps_these_quarters(code):                  # 这些季度的每股收益
+    last_qtrs = last_eight_qtrs(get_today())
+    rd = RawData()
+    count = 0  
+    for i in range(len(last_qtrs)):
+        df = rd.req_tushare_query(code, last_qtrs[i])
+        if( len(df) != 0 ):
+            if( count==0 ):
+                EPSs = [last_qtrs[i]]
+            EPSs.append(df.iloc[0]['eps'])
+            count += 1
+            if( count >= 5 ):
+                break
     return(EPSs)
 def fina_indicator(code, pro):           	  # 准备利润增速数据   每股经营活动产生的现金流量净额 和 流动比率
-    last5qtrs = get_last5qtrs()
+    last_qtrs = last_eight_qtrs(get_today())
     # 准备利润增速数据
-    pft=[]
+    pft_qtr=[]
     rt={}
-    df = pro.query('fina_indicator', ts_code=get_t_s_id(code), start_date=last5qtrs[4], end_date=get_today())
-    for dfr in df.iterrows():
-        dt = dfr[1]
-        if( len(pft) == 0 ):
-            pft.append(dt['end_date'])
-            # 每股经营活动产生的现金流量净额
-            if( not is_pseudo_number(dt['ocfps']) ):
-                rt['ocfps'] = dt['ocfps']
-            # 基本每股收益
-            if( not is_pseudo_number(dt['eps']) ):
-                rt['eps'] = dt['eps']
-            # 流动比率
-            if( not is_pseudo_number(dt['current_ratio']) ):
-                rt['current_ratio'] = dt['current_ratio']
-            else:
-                rt['current_ratio'] = None
-        pft.append(dt['profit_dedt'])
-    rt['pft'] = pft
+    rd = RawData()
+    count = 0
+    for i in range(len(last_qtrs)):
+        df = rd.req_tushare_query(code, last_qtrs[i])
+        if( len(df) != 0 ):
+            if( count == 0 ):
+                pft_qtr.append(df.iloc[0]['end_date'])
+                # 每股经营活动产生的现金流量净额
+                if( not is_pseudo_number(df.iloc[0]['ocfps']) ):
+                    rt['ocfps'] = df.iloc[0]['ocfps']
+                # 基本每股收益
+                if( not is_pseudo_number(df.iloc[0]['eps']) ):
+                    rt['eps'] = df.iloc[0]['eps']
+                # 流动比率
+                if( not is_pseudo_number(df.iloc[0]['current_ratio']) ):
+                    rt['current_ratio'] = df.iloc[0]['current_ratio']
+                else:
+                    rt['current_ratio'] = None
+            pft_qtr.append(df.iloc[0]['profit_dedt'])
+            count += 1
+            if( count >= 5 ):
+                break
+    rt['pft_qtr'] = pft_qtr
     return(rt)
 def calc_income_up(dividend):                   #  计算稳升
     up = 'Y'
@@ -307,7 +322,7 @@ def calc_stk_div_ratio(price, dividend, convert_rate):     # 当前股息率
         rt = None
     return(rt)
 def get_forecast(code, pro):
-    s_date = get_last_qtr()[0:6] + '01'
+    s_date = last_qtr(get_today())[0:6] + '01'
     df = pro.forecast(ts_code=get_t_s_id(code), start_date=s_date, end_date=get_today(), fields='type, end_date, p_change_min, p_change_max, net_profit_min, net_profit_max')
     for dfr in df.iterrows():
         dt = dfr[1]
@@ -316,7 +331,7 @@ def get_forecast(code, pro):
             print(dt)
         print('[]')
 def get_express(code, pro):
-    s_date = get_last_qtr()[0:6] + '01'
+    s_date = last_qtr(get_today())[0:6] + '01'
     df = pro.express(ts_code=get_t_s_id(code), start_date=s_date, end_date=get_today(), fields='ann_date, end_date, n_income, diluted_eps, yoy_tp, yoy_eps')
     for dfr in df.iterrows():
         dt = dfr[1]
@@ -327,8 +342,8 @@ def get_express(code, pro):
 def profit_dedt_last_five_years(code, years):
     profit_dedt = []
     profit_dedt.append(years[0])
+    rd = RawData()
     for i in range(len(years)):
-        rd = RawData()
         df = rd.req_tushare_query(code, years[i])
         profit_dedt.append(df.iloc[0]['profit_dedt'])
     return(profit_dedt)        
@@ -401,7 +416,7 @@ class Share():
                         self.dt['convert'][i] = dq_div[0][i]
     def last_five_years_EPS(self,cls):
         year = get_last_x_years(5)
-        epss = eps_these_years(self.id, cls.pro, year)
+        epss = eps_these_years(self.id, year)
         self.dt['EPS'] = epss
     def calc_lfy_div_rate(self):         # 类内计算 --- 计算5年分红率
         dr = []
@@ -420,29 +435,25 @@ class Share():
             print('--- wrong in func lfy_div_rate() ---')
         self.rt['div_rate'] = dr
     def last_five_quarters_EPS(self,cls):
-        qs_eps = eps_these_quarters(self.id, cls.pro)
+        qs_eps = eps_these_quarters(self.id)
         self.dt['EPS_qtr'] = qs_eps
     def get_EPS_TTM(self):
-        last_5_qtrs = []
-        last_5_qtrs.append(get_last_qtr())
-        x = get_last5qtrs()
-        for i in range(5):
-            last_5_qtrs.append(x[i])
-        if( last_5_qtrs[1][4:8] == '1231' ):
+        last_qtrs = last_eight_qtrs(self.dt['EPS_qtr'][0])
+        if( last_qtrs[0][4:8] == '1231' ):
             eps_ttm = self.dt['EPS_qtr'][1]
         else:
             eps_q = self.dt['EPS_qtr']
             for i in range(2,6):
-                if( last_5_qtrs[i][4:8] == '1231'):
+                if( last_qtrs[i-1][4:8] == '1231'):
                     eps_ttm = eps_q[1] + eps_q[i] - eps_q[5]
                     break
         self.rt['EPS_ttm'] = round(eps_ttm, 3)
     def get_fina_data(self,cls):
         rt = fina_indicator(self.id,cls.pro)
         if( 'pft' in rt ):
-            self.dt['profit_dedt'] = rt['pft']
+            self.dt['profit_dedt_qtrs'] = rt['pft_qtr']
         else:
-            self.dt['profit_dedt'] = 0
+            self.dt['profit_dedt_qtrs'] = 0
         if( 'ocfps' in rt ):
             self.dt['ocfps'] = rt['ocfps']
         else:
@@ -456,7 +467,7 @@ class Share():
         else:
             self.dt['current_ratio'] = 1
     def get_net_income(self,cls):           # 净利润 
-        df = cls.pro.income(ts_code=get_t_s_id(self.id), start_date=get_last_qtr(), end_date=get_today(), fields='n_income')
+        df = cls.pro.income(ts_code=get_t_s_id(self.id), start_date=last_qtr(get_today()), end_date=get_today(), fields='n_income')
         for dfr in df.iterrows():
             dt = dfr[1]
             if( not is_pseudo_number(dt['n_income']) ):
@@ -464,7 +475,7 @@ class Share():
             else:
                 self.dt['n_income'] = None
     def get_total_share(self,cls):              # 总股本
-        df = cls.pro.balancesheet(ts_code=get_t_s_id(self.id), start_date=get_last_qtr(), end_date=get_today(), fields='total_share')
+        df = cls.pro.balancesheet(ts_code=get_t_s_id(self.id), start_date=last_qtr(get_today()), end_date=get_today(), fields='total_share')
         for dfr in df.iterrows():
             dt = dfr[1]
             if( not is_pseudo_number(dt['total_share']) ):

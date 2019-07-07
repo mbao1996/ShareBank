@@ -17,12 +17,13 @@ url_quotation_before = "http://hq.sinajs.cn/list="
 #    dt['n_income']                 净利润
 #    dt['ocfps']                    每股经营活动产生的现金流量净额
 #    dt['total_share']              总股本
-#    dt['profit_dedt']              扣除非经常性损益后的净利润
+#    dt['profit_dedt_qtrs']         最近几个季度扣除非经常性损益后的净利润
+#    dt['profit_dedt_years']        最近几年扣除非经常性损益后的净利润
 #    rt['avg_div_rate']             5年平均分红率
-#    rt['eps']                      基本每股收益
-#    rt['EPS_ttm']                  EPS_ttm
 #    rt['convert_rate']             股份调整率
 #    rt['div_rate']                 5年分红率
+#    rt['eps']                      基本每股收益
+#    rt['EPS_ttm']                  EPS_ttm
 #    rt['gold_include']             含金量
 #    rt['last_year_div']            最新年度分红
 #    rt['profit_dedt_acc']          净利润季报增速

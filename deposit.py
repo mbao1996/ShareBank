@@ -8,7 +8,7 @@ fn = work_catalog + bank_name
 ShareBank = read_data(fn)
 flag = 'goodu'
 
-row_start = 30     # adjustable
+row_start = 0     # adjustable
 for i in range(row_start, len(ShareBank)):
     s = ShareBank[i]
     rd = RawData()
