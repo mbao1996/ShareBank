@@ -7,9 +7,10 @@ ShareBank = read_data(fn)
 
 flag_before = 'no'
 flag_after = 'holding'
-to_add = ['600395', 'grade', 3]
+to_add = ['code', 'grade', 6]
 to_del = ['code', 'holding']
-batch_add = 'attention'
+batch_add = ''
+batch_del = 'watch'
 
 count = 0
 for i in range( len(ShareBank) ):
@@ -40,6 +41,15 @@ for i in range( len(ShareBank) ):
         count += 1
         s.flag[batch_add] = 'Y'
         print(i, '[max:', len(ShareBank), ']: ', s.nmcard(), '---flag---:', s.flag)
+    # batch del
+    batch_del_flag = True
+    if(batch_del_flag):
+        if( batch_del in s.flag ):
+            count += 1
+            del s.flag[batch_del]
+            s.flag['attention'] = 'Y'
+            print(s.nmcard(), s.flag)
+
 
 print(count)        
 save_data(fn, ShareBank)

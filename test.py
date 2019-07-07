@@ -12,22 +12,17 @@ print('   ***   tushare_version: ', tushare.__version__, '   ***\n')
 
 
 ShareBank = read_data(fn)
-s = ShareBank[23]
-print(s.dt['EPS_qtr'])
-print(s.rt['EPS_ttm'])
-s.get_EPS_TTM()
-print(s.rt['EPS_ttm'])
 
-'''
 start = 0
-#end = len(ShareBank)
-end = 1
+end = len(ShareBank)
+#end = 1
 for i in range(start, end):
     s = ShareBank[i]
     s.dt['profit_dedt_qtrs'] = s.dt['profit_dedt']
     del s.dt['profit_dedt']
-#save_data(fn, ShareBank)
-
+#    print(s.dt['profit_dedt_years'])
+save_data(fn, ShareBank)
+'''
 ts.set_token(TOKEN)
 pro = ts.pro_api()
 mode = 'query'

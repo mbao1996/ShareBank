@@ -10,6 +10,7 @@ import tushare as ts
 from urllib.request import urlopen
 from urllib.request import Request
 from define import *
+
 my_flag = 'goodu'
 hd_flag = 'holding'
 
@@ -492,11 +493,12 @@ class Share():
         self.get_fina_data(self)
         self.get_net_income(self)
         self.get_total_share(self)
+        self.profit_dedt(self,cls)
     def calc(self):
         self.calc_lfy_div_rate()
         self.get_EPS_TTM()
         self.rt['income_up'] = calc_income_up(self.dt['dividend'])
-        self.rt['profit_dedt_acc'] = calc_pft_acc(self.dt['profit_dedt'])                         # 净利润季报增速
+        self.rt['profit_dedt_acc'] = calc_pft_acc(self.dt['profit_dedt_qtrs'])                         # 净利润季报增速
         self.rt['gold_include'] = calc_gold_include(self.dt['ocfps'], self.dt['eps'])
         self.rt['convert_rate'] = calc_convert_rate(self.dt['convert'])
         self.rt['avg_div_rate'] = calc_avg_div_rates(self.rt['div_rate'])
@@ -515,8 +517,15 @@ class Share():
         get_forecast(self.id, cls.pro)
     def profit_dedt(self,cls):
         years = get_last_x_years(5)
-        profit_dedt = profit_dedt_last_five_years(self.id, years)
-        self.dt['profit_dedt_years'] = profit_dedt
+        req = False
+        if( 'profit_dedt_years' in self.dt ):
+            if( self.dt['profit_dedt_years'][0] != get_last_x_years(5)[0] ):
+                req = True
+        else:
+            req = True
+        if( req ):    
+            profit_dedt = profit_dedt_last_five_years(self.id, years)
+            self.dt['profit_dedt_years'] = profit_dedt
 class RawData():
     ts.set_token(TOKEN)
     pro = ts.pro_api()
@@ -532,8 +541,6 @@ class RawData():
                 if( cls.df_query.iloc[i]['end_date'] == period ):
                     df = cls.df_query.iloc[[i]]
                     get = True
-                    # sleep
-                    time.sleep(2)
                     break
         if( get == False ):
             mode = 'query'
@@ -542,4 +549,6 @@ class RawData():
             para.append(period)
             df = req_tushare(cls.pro, mode, para)
             cls.df_query = cls.df_query.append(df, ignore_index=True)
+            # sleep
+            time.sleep(1)
         return(df)
