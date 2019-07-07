@@ -125,9 +125,13 @@ def req_tushare(pro, mode, para):
         except Exception as e:
             print(str(e))
             os._exit(0)
+    elif( mode == 'stock_basic' ):
+        df = pro.stock_basic(exchange='', list_status=para[0], fields=para[1])
     else:
         df = None
         print('mode:', mode, ' not exist.')
+    # sleep
+    time.sleep(1)
     return(df)
 def dividend_one_year(df, year):
     dqexe = []
@@ -372,8 +376,8 @@ def fill_flag(s):
             flag = 'Att'
     return(flag)
 class Share():
-    df_stock_basic = None
-    has_stock_basic = False
+    df_stock_basic = None           # can be delete
+    has_stock_basic = False         # can be delete
     today = get_today()
     ts.set_token(TOKEN)
     pro = ts.pro_api()
@@ -386,25 +390,17 @@ class Share():
         self.rt = {}          # 计算结果
         self.cp = {}          # 与price相关的计算结果
     @classmethod
-    def stock_basic_df(cls):
-        if( not cls.has_stock_basic ):
-            cls.has_stock_basic = True
-            cls.df_stock_basic = cls.pro.stock_basic(exchange='', list_status='L', fields='symbol,area,industry,list_date')
-        return(cls.df_stock_basic)
-    def nmcard(self):
-        return(self.id+'['+self.name+']')
     def name_price_fill(self):
         self.name, self.price = get_name_price(self.id)
-    def prt(self):
-        print(self.nmcard())
     def stock_basic_fill(self):
-        df = Share.stock_basic_df()
-        for dfr in df.iterrows():
-            dt = dfr[1]
-            if( dt['symbol'] == self.id ):
-                self.dt['industry'] = dt['industry']
-                self.dt['area'] = dt['area']
-                self.dt['list_date'] = dt['list_date']
+        rd = RawData()
+        df = rd.req_stock_basic()
+        for i in range(df.shape[0]):
+            if( df.loc[i]['symbol'] == self.id ):
+                self.dt['industry'] = df.loc[i]['industry']
+                self.dt['area'] = df.loc[i]['area']
+                self.dt['list_date'] = df.loc[i]['list_date']
+                break
         return()
     def last_five_years_dividend(self,cls):
         dividends_last, dq_div = dividends_for_stock(self.id, cls.pro, cls.today)
@@ -530,6 +526,7 @@ class RawData():
     ts.set_token(TOKEN)
     pro = ts.pro_api()
     df_query = pd.DataFrame()
+    df_stock_basic = pd.DataFrame()
     @classmethod
     def reset(cls):
         cls.df_query = pd.DataFrame()
@@ -549,6 +546,18 @@ class RawData():
             para.append(period)
             df = req_tushare(cls.pro, mode, para)
             cls.df_query = cls.df_query.append(df, ignore_index=True)
-            # sleep
-            time.sleep(1)
         return(df)
+    @classmethod    
+    def req_stock_basic(cls):
+        if(cls.df_stock_basic.shape[0] == 0):
+            mode = 'stock_basic'
+            para = []
+            para.append('L')
+            para.append('symbol,area,industry,list_date')
+            print('---debug---1---', para)
+            cls.df_stock_basic = req_tushare(cls.pro, mode, para)
+        return(cls.df_stock_basic)    
+            
+            
+            
+            

@@ -5,7 +5,7 @@ from lib import *
 fn = work_catalog + bank_name
 ShareBank = read_data(fn)
 
-code = '601818'
+code = '000895'
 flag = ''
 count = 0
 
