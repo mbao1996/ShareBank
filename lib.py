@@ -118,21 +118,6 @@ def get_last_x_years(x):
     for i in range(x):
         years.append(str(int(get_today()[0:4]) - 1 - i) + '1231')
     return(years)
-def req_tushare(pro, mode, para):
-    if( mode == 'query'):
-        try:
-            df = pro.query('fina_indicator', ts_code=para[0], period=para[1])
-        except Exception as e:
-            print(str(e))
-            os._exit(0)
-    elif( mode == 'stock_basic' ):
-        df = pro.stock_basic(exchange='', list_status=para[0], fields=para[1])
-    else:
-        df = None
-        print('mode:', mode, ' not exist.')
-    # sleep
-    time.sleep(1)
-    return(df)
 def dividend_one_year(df, year):
     dqexe = []
     dqplan = []
@@ -394,7 +379,7 @@ class Share():
         self.name, self.price = get_name_price(self.id)
     def stock_basic_fill(self):
         rd = RawData()
-        df = rd.req_stock_basic()
+        df = rd.req_stock_basic(rd)
         for i in range(df.shape[0]):
             if( df.loc[i]['symbol'] == self.id ):
                 self.dt['industry'] = df.loc[i]['industry']
@@ -511,7 +496,7 @@ class Share():
         get_forecast(self.id, cls.pro)
     def express(self,cls):
         get_forecast(self.id, cls.pro)
-    def profit_dedt(self,cls):
+    def profit_dedt(self):
         years = get_last_x_years(5)
         req = False
         if( 'profit_dedt_years' in self.dt ):
@@ -531,7 +516,7 @@ class RawData():
     def reset(cls):
         cls.df_query = pd.DataFrame()
     @classmethod    
-    def req_tushare_query(cls, code, period):
+    def req_tushare_query(self, cls, code, period):
         get = False
         if(cls.df_query.shape[0] != 0):
             for i in range(cls.df_query.shape[0]):
@@ -544,19 +529,34 @@ class RawData():
             para = []
             para.append(get_t_s_id(code))
             para.append(period)
-            df = req_tushare(cls.pro, mode, para)
+            df = self.req_tushare(self, cls, mode, para)
             cls.df_query = cls.df_query.append(df, ignore_index=True)
         return(df)
     @classmethod    
-    def req_stock_basic(cls):
+    def req_stock_basic(self, cls):
         if(cls.df_stock_basic.shape[0] == 0):
             mode = 'stock_basic'
             para = []
             para.append('L')
             para.append('symbol,area,industry,list_date')
             print('---debug---1---', para)
-            cls.df_stock_basic = req_tushare(cls.pro, mode, para)
+            cls.df_stock_basic = self.req_tushare(self, cls, mode, para)
         return(cls.df_stock_basic)    
+    def req_tushare(self, cls, mode, para):
+        if( mode == 'query'):
+            try:
+                df = cls.pro.query('fina_indicator', ts_code=para[0], period=para[1])
+            except Exception as e:
+                print(str(e))
+                os._exit(0)
+        elif( mode == 'stock_basic' ):
+            df = cls.pro.stock_basic(exchange='', list_status=para[0], fields=para[1])
+        else:
+            df = None
+            print('mode:', mode, ' not exist.')
+        # sleep
+        time.sleep(1)
+        return(df)
             
             
             
