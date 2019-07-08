@@ -1,21 +1,24 @@
-# -*- coding: utf-8 -*-
-
-import time
+#coding=gbk
+import tushare
+import os
 from define import *
 from lib import *
 
-fn = work_catalog + bank_name
+fn = work_catalog + bank_name 
+print('   ***   tushare_version: ', tushare.__version__, '   ***\n')
+
 ShareBank = read_data(fn)
 
-my_flag = 'goodu'
-
-code = '600566'    
-if( len(ShareBank) != 0 ):
-    for i in range(len(ShareBank)):
-        if( ShareBank[i].id == code):
-            ShareBank[i].flag[my_flag] = 'Y'
-            print(ShareBank[i].name, ' --- Done ---')
-            break
+flag = ['goodu', 'holding']
+cnt = 0
+for i in range(len(ShareBank)):
+    s = ShareBank[i]
+    if( has_flag(s, flag) ):
+        s.forecast(s)
+#        s.express()
+        cnt += 1
+#        print(s.nmcard(), s.flag)
+        
+print(cnt)
     
-    save_data(fn, ShareBank)
 print('\n finished')
