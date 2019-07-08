@@ -155,7 +155,8 @@ def dividends_for_stock(code, pro, today):                   # get last 6 years
     Ddd = []
     Ddd.append(str(int(today[0:4])-1)+'1231')
     dqdiv = []
-    df = pro.dividend(ts_code=get_t_s_id(code), fields='cash_div_tax,div_proc,end_date,record_date,ex_date,stk_bo_rate,stk_co_rate,stk_div')
+    rd = RawData()
+    df = rd.req_dividend(rd, code)
     for i in range(1, 6):
         year = str( int(today[0:4])-i )
         Ddd.append(round(dividend_one_year(df, year),4))
@@ -448,14 +449,6 @@ class Share():
             self.dt['current_ratio'] = rt['current_ratio']
         else:
             self.dt['current_ratio'] = 1
-    def get_net_income(self,cls):           # 净利润 
-        df = cls.pro.income(ts_code=get_t_s_id(self.id), start_date=last_qtr(get_today()), end_date=get_today(), fields='n_income')
-        for dfr in df.iterrows():
-            dt = dfr[1]
-            if( not is_pseudo_number(dt['n_income']) ):
-                self.dt['n_income'] = dt['n_income']
-            else:
-                self.dt['n_income'] = None
     def get_total_share(self,cls):              # 总股本
         df = cls.pro.balancesheet(ts_code=get_t_s_id(self.id), start_date=last_qtr(get_today()), end_date=get_today(), fields='total_share')
         for dfr in df.iterrows():
@@ -472,7 +465,6 @@ class Share():
         self.last_five_quarters_EPS(self)
         self.get_EPS_TTM()
         self.get_fina_data(self)
-        self.get_net_income(self)
         self.get_total_share(self)
         self.profit_dedt(self,cls)
     def calc(self):
@@ -512,9 +504,28 @@ class RawData():
     pro = ts.pro_api()
     df_query = pd.DataFrame()
     df_stock_basic = pd.DataFrame()
+    df_dividend = pd.DataFrame()
     @classmethod
     def reset(cls):
         cls.df_query = pd.DataFrame()
+        df_dividend = pd.DataFrame()
+    def req_tushare(self, cls, mode, para):
+        if( mode == 'query'):
+            try:
+                df = cls.pro.query('fina_indicator', ts_code=para[0], period=para[1])
+            except Exception as e:
+                print(str(e))
+                os._exit(0)
+        elif( mode == 'stock_basic' ):
+            df = cls.pro.stock_basic(exchange='', list_status=para[0], fields=para[1])
+        elif( mode == 'dividend' ):
+            df = cls.pro.dividend(ts_code=get_t_s_id(para[0]), fields=para[1])
+        else:
+            df = None
+            print('mode:', mode, ' not exist.')
+        # sleep
+        time.sleep(1)
+        return(df)
     @classmethod    
     def req_tushare_query(self, cls, code, period):
         get = False
@@ -539,25 +550,15 @@ class RawData():
             para = []
             para.append('L')
             para.append('symbol,area,industry,list_date')
-            print('---debug---1---', para)
             cls.df_stock_basic = self.req_tushare(self, cls, mode, para)
-        return(cls.df_stock_basic)    
-    def req_tushare(self, cls, mode, para):
-        if( mode == 'query'):
-            try:
-                df = cls.pro.query('fina_indicator', ts_code=para[0], period=para[1])
-            except Exception as e:
-                print(str(e))
-                os._exit(0)
-        elif( mode == 'stock_basic' ):
-            df = cls.pro.stock_basic(exchange='', list_status=para[0], fields=para[1])
-        else:
-            df = None
-            print('mode:', mode, ' not exist.')
-        # sleep
-        time.sleep(1)
-        return(df)
-            
-            
-            
-            
+        return(cls.df_stock_basic)
+    @classmethod    
+    def req_dividend(self, cls, code):
+        if(cls.df_dividend.shape[0] == 0):
+            mode = 'dividend'
+            para = []
+            para.append(code)
+            para.append('cash_div_tax,div_proc,end_date,record_date,ex_date,stk_bo_rate,stk_co_rate,stk_div')
+            cls.df_dividend = self.req_tushare(self, cls, mode, para)
+        return(cls.df_dividend)
+    def    
