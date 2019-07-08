@@ -378,6 +378,8 @@ class Share():
     @classmethod
     def name_price_fill(self):
         self.name, self.price = get_name_price(self.id)
+    def nmcard(self):
+        return(self.id + '[' + self.name + ']')
     def stock_basic_fill(self):
         rd = RawData()
         df = rd.req_stock_basic(rd)

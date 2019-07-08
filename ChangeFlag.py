@@ -10,10 +10,12 @@ flag_after = 'holding'
 to_add = ['code', 'grade', 6]
 to_del = ['code', 'holding']
 batch_add = ''
-batch_del = 'watch'
+batch_del = 'n_income'
 
 count = 0
-for i in range( len(ShareBank) ):
+end = len(ShareBank)
+#end = 5
+for i in range( end ):
     s = ShareBank[i]
     # change
     if( flag_before in s.flag ):
@@ -44,13 +46,13 @@ for i in range( len(ShareBank) ):
     # batch del
     batch_del_flag = True
     if(batch_del_flag):
-        if( batch_del in s.flag ):
+        if( batch_del in s.dt ):
+#            print(s.dt)
             count += 1
-            del s.flag[batch_del]
-            s.flag['attention'] = 'Y'
-            print(s.nmcard(), s.flag)
+            del s.dt[batch_del]
+#            print(s.nmcard(), s.dt)
 
 
 print(count)        
-save_data(fn, ShareBank)
+#save_data(fn, ShareBank)
 print('\n finished')

@@ -14,7 +14,6 @@ url_quotation_before = "http://hq.sinajs.cn/list="
 #    dt['current_ratio']            流动比率
 #    dt['dividend']                 历年分红
 #    dt['industry']                 行业
-#    dt['n_income']                 净利润-----------------------------准备删除
 #    dt['ocfps']                    每股经营活动产生的现金流量净额
 #    dt['total_share']              总股本
 #    dt['profit_dedt_qtrs']         最近几个季度扣除非经常性损益后的净利润
