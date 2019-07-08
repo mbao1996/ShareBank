@@ -450,13 +450,12 @@ class Share():
         else:
             self.dt['current_ratio'] = 1
     def get_total_share(self,cls):              # 总股本
-        df = cls.pro.balancesheet(ts_code=get_t_s_id(self.id), start_date=last_qtr(get_today()), end_date=get_today(), fields='total_share')
-        for dfr in df.iterrows():
-            dt = dfr[1]
-            if( not is_pseudo_number(dt['total_share']) ):
-                self.dt['total_share'] = dt['total_share']
-            else:
-                self.dt['total_share'] = None
+        rd = RawData()
+        df = rd.req_balancesheet(rd, self.id)
+        if( not is_pseudo_number(df.iloc[0]['total_share']) ):
+            self.dt['total_share'] = df.iloc[0]['total_share']
+        else:
+            self.dt['total_share'] = None
     def get_base(self):
         self.name_price_fill()
         self.stock_basic_fill()
@@ -505,10 +504,11 @@ class RawData():
     df_query = pd.DataFrame()
     df_stock_basic = pd.DataFrame()
     df_dividend = pd.DataFrame()
-    @classmethod
-    def reset(cls):
+    df_balancesheet = pd.DataFrame()
+    def reset(self, cls):
         cls.df_query = pd.DataFrame()
         df_dividend = pd.DataFrame()
+        df_balancesheet = pd.DataFrame()
     def req_tushare(self, cls, mode, para):
         if( mode == 'query'):
             try:
@@ -520,13 +520,14 @@ class RawData():
             df = cls.pro.stock_basic(exchange='', list_status=para[0], fields=para[1])
         elif( mode == 'dividend' ):
             df = cls.pro.dividend(ts_code=get_t_s_id(para[0]), fields=para[1])
+        elif( mode == 'balancesheet' ):
+            df = cls.pro.balancesheet(ts_code=get_t_s_id(para[0]), start_date=para[1], end_date=get_today(), fields=para[2])
         else:
             df = None
             print('mode:', mode, ' not exist.')
         # sleep
         time.sleep(1)
         return(df)
-    @classmethod    
     def req_tushare_query(self, cls, code, period):
         get = False
         if(cls.df_query.shape[0] != 0):
@@ -540,25 +541,37 @@ class RawData():
             para = []
             para.append(get_t_s_id(code))
             para.append(period)
-            df = self.req_tushare(self, cls, mode, para)
+            df = self.req_tushare(cls, mode, para)
             cls.df_query = cls.df_query.append(df, ignore_index=True)
         return(df)
-    @classmethod    
     def req_stock_basic(self, cls):
         if(cls.df_stock_basic.shape[0] == 0):
             mode = 'stock_basic'
             para = []
             para.append('L')
             para.append('symbol,area,industry,list_date')
-            cls.df_stock_basic = self.req_tushare(self, cls, mode, para)
+            cls.df_stock_basic = self.req_tushare(cls, mode, para)
         return(cls.df_stock_basic)
-    @classmethod    
     def req_dividend(self, cls, code):
         if(cls.df_dividend.shape[0] == 0):
             mode = 'dividend'
             para = []
             para.append(code)
             para.append('cash_div_tax,div_proc,end_date,record_date,ex_date,stk_bo_rate,stk_co_rate,stk_div')
-            cls.df_dividend = self.req_tushare(self, cls, mode, para)
+            cls.df_dividend = self.req_tushare(cls, mode, para)
         return(cls.df_dividend)
-    def    
+    def req_balancesheet(self, cls, code):  
+        if(cls.df_balancesheet.shape[0] == 0):
+            mode = 'balancesheet'
+            para = []
+            para.append(code)
+            para.append(last_eight_qtrs(get_today())[0])
+            para.append('total_share, end_date')
+            for i in range(len(last_eight_qtrs(get_today()))):
+                para[1] = last_eight_qtrs(get_today())[i]
+                df = self.req_tushare(cls, mode, para)
+                if(df.shape[0] != 0):
+                    break
+            cls.df_balancesheet = df
+        return(cls.df_balancesheet)
+    

@@ -12,7 +12,7 @@ row_start = 0     # adjustable
 for i in range(row_start, len(ShareBank)):
     s = ShareBank[i]
     rd = RawData()
-    rd.reset()
+    rd.reset(rd)
     if( flag in s.flag ):
         cnt += 1
 #        s.name_price_fill()
@@ -22,7 +22,7 @@ for i in range(row_start, len(ShareBank)):
 #    s.get_base()
         s.calc()
         s.calc_cp()
-        save_data(fn, ShareBank)
+#        save_data(fn, ShareBank)
 #save_data(fn, ShareBank)
 
 print(cnt, '\n finished')
