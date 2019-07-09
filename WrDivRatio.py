@@ -39,12 +39,13 @@ except Exception as e:
 ws = wb['Sheet1']
 
 gd_flag = 'grade'
+flag = ['goodu', 'holding']
 
 xl_row = row_start
 
 for i in range( len(ShareBank) ):
     s = ShareBank[i]
-    if( my_flag in s.flag or hd_flag in s.flag ):
+    if( has_flag(s, flag) ):
 #        print(i, '[max:', len(ShareBank), ']: ', s.nmcard(), '---flag---:', s.flag)
         ws.cell(xl_row, col_code).value = get_sina_id(s.id)
         ws.cell(xl_row, col_name).value = s.name

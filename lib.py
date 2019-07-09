@@ -162,11 +162,10 @@ def dividend_one_year(df, year):
         for i in range(len(dqexe)):
             Dvdd += dqexe[i][2]
     return(Dvdd)
-def dividends_for_stock(code, pro, today):                   # get last 6 years
+def dividends_for_stock(rd, code, today):                   # get last 6 years
     Ddd = []
     Ddd.append(str(int(today[0:4])-1)+'1231')
     dqdiv = []
-    rd = RawData()
     df = rd.req_dividend(rd, code)
     for i in range(1, 6):
         year = str( int(today[0:4])-i )
@@ -217,23 +216,21 @@ def last_eight_qtrs(data_from):
                     x = str(x) + Quarter[j-1]
                 last8qtrs.append(x)    
     return(last8qtrs)
-def eps_these_years(code, year):              # 这些年的每股收益
+def eps_these_years(rd, code, year):              # 这些年的每股收益
     epss = []
     epss.append(year[0])
-    rd = RawData()
     for i in range(len(year)):
-        df = rd.req_tushare_query(code, year[i])
+        df = rd.req_tushare_query(rd, code, year[i])
         if(len(df) == 0):
             epss.append('None')
         else:
             epss.append(df.iloc[0]['eps'])
     return(epss)        
-def eps_these_quarters(code):                  # 这些季度的每股收益
+def eps_these_quarters(rd, code):                  # 这些季度的每股收益
     last_qtrs = last_eight_qtrs(get_today())
-    rd = RawData()
     count = 0  
     for i in range(len(last_qtrs)):
-        df = rd.req_tushare_query(code, last_qtrs[i])
+        df = rd.req_tushare_query(rd, code, last_qtrs[i])
         if( len(df) != 0 ):
             if( count==0 ):
                 EPSs = [last_qtrs[i]]
@@ -242,15 +239,14 @@ def eps_these_quarters(code):                  # 这些季度的每股收益
             if( count >= 5 ):
                 break
     return(EPSs)
-def fina_indicator(code, pro):           	  # 准备利润增速数据   每股经营活动产生的现金流量净额 和 流动比率
+def fina_indicator(rd, code):           	  # 准备利润增速数据   每股经营活动产生的现金流量净额 和 流动比率
     last_qtrs = last_eight_qtrs(get_today())
     # 准备利润增速数据
     pft_qtr=[]
     rt={}
-    rd = RawData()
     count = 0
     for i in range(len(last_qtrs)):
-        df = rd.req_tushare_query(code, last_qtrs[i])
+        df = rd.req_tushare_query(rd, code, last_qtrs[i])
         if( len(df) != 0 ):
             if( count == 0 ):
                 pft_qtr.append(df.iloc[0]['end_date'])
@@ -323,18 +319,15 @@ def calc_stk_div_ratio(price, dividend, convert_rate):     # 当前股息率
     else:
         rt = None
     return(rt)
-def get_forecast(code, start_date):
-    rd = RawData()
+def get_forecast(rd, code, start_date):
     df = rd.req_forecast(rd, code, start_date)
     return(df)
-def get_express(code, start_date):
-    rd = RawData()
+def get_express(rd, code, start_date):
     df = rd.req_express(rd, code, start_date)
     return(df)
-def profit_dedt_last_five_years(code, years):
+def profit_dedt_last_five_years(rd, code, years):
     profit_dedt = []
     profit_dedt.append(years[0])
-    rd = RawData()
     for i in range(len(years)):
         df = rd.req_tushare_query(code, years[i])
         profit_dedt.append(df.iloc[0]['profit_dedt'])
@@ -362,144 +355,7 @@ def fill_flag(s):
         if( s.flag[my_flag] == 'Y' and s.flag[hd_flag] == 'Y' ):
             flag = 'Att'
     return(flag)
-class Share():
-    def __init__(self):
-        self.id = ''
-        self.name =''
-        self.price = 0.0
-        self.flag = {}
-        self.dt = {}          # 原始数据
-        self.rt = {}          # 计算结果
-        self.cp = {}          # 与price相关的计算结果
-    @classmethod
-    def name_price_fill(self):
-        self.name, self.price = get_name_price(self.id)
-    def nmcard(self):
-        return(self.id + '[' + self.name + ']')
-    def stock_basic_fill(self):
-        rd = RawData()
-        df = rd.req_stock_basic(rd)
-        for i in range(df.shape[0]):
-            if( df.loc[i]['symbol'] == self.id ):
-                self.dt['industry'] = df.loc[i]['industry']
-                self.dt['area'] = df.loc[i]['area']
-                self.dt['list_date'] = df.loc[i]['list_date']
-                break
-        return()
-    def last_five_years_dividend(self,cls):
-        dividends_last, dq_div = dividends_for_stock(self.id, cls.pro, get_today())
-        self.dt['dividend'] = dividends_last
-        for i in range(6):
-            self.dt['convert'] = ['', 0.0, 0.0, 0.0]   # 转送股
-            if( len(dq_div) != 0 ):
-                for i in range(4):
-                    if( not is_pseudo_number(dq_div[0][i]) ):
-                        self.dt['convert'][i] = dq_div[0][i]
-    def last_five_years_EPS(self,cls):
-        year = get_last_x_years(5)
-        epss = eps_these_years(self.id, year)
-        self.dt['EPS'] = epss
-    def calc_lfy_div_rate(self):         # 类内计算 --- 计算5年分红率
-        dr = []
-        if(self.dt['EPS'][0] == self.dt['dividend'][0]):
-            dr.append(self.dt['EPS'][0])
-            for i in range(1, 6):
-                if( self.dt['dividend'][i] == 0.0 ):
-                    div_rate = 0.0
-                else:
-                    if(not is_pseudo_number(self.dt['EPS'][i])):
-                        div_rate = self.dt['dividend'][i] / self.dt['EPS'][i]
-                    else:
-                        div_rate = -1.0
-                dr.append(round(div_rate, 4))
-        else:
-            print('--- wrong in func lfy_div_rate() ---')
-        self.rt['div_rate'] = dr
-    def last_five_quarters_EPS(self,cls):
-        qs_eps = eps_these_quarters(self.id)
-        self.dt['EPS_qtr'] = qs_eps
-    def get_EPS_TTM(self):
-        last_qtrs = last_eight_qtrs(self.dt['EPS_qtr'][0])
-        if( last_qtrs[0][4:8] == '1231' ):
-            eps_ttm = self.dt['EPS_qtr'][1]
-        else:
-            eps_q = self.dt['EPS_qtr']
-            for i in range(2,6):
-                if( last_qtrs[i-1][4:8] == '1231'):
-                    eps_ttm = eps_q[1] + eps_q[i] - eps_q[5]
-                    break
-        self.rt['EPS_ttm'] = round(eps_ttm, 3)
-    def get_fina_data(self,cls):
-        rt = fina_indicator(self.id,cls.pro)
-        if( 'pft' in rt ):
-            self.dt['profit_dedt_qtrs'] = rt['pft_qtr']
-        else:
-            self.dt['profit_dedt_qtrs'] = 0
-        if( 'ocfps' in rt ):
-            self.dt['ocfps'] = rt['ocfps']
-        else:
-            self.dt['ocfps'] = None
-        if( 'eps' in rt ):
-            self.dt['eps'] = rt['eps']
-        else:
-            self.dt['eps'] = 0.0
-        if( 'current_ratio' in rt ):
-            self.dt['current_ratio'] = rt['current_ratio']
-        else:
-            self.dt['current_ratio'] = 1
-    def get_total_share(self,cls):              # 总股本
-        rd = RawData()
-        df = rd.req_balancesheet(rd, self.id)
-        if( not is_pseudo_number(df.iloc[0]['total_share']) ):
-            self.dt['total_share'] = df.iloc[0]['total_share']
-        else:
-            self.dt['total_share'] = None
-    def get_base(self):
-        self.name_price_fill()
-        self.stock_basic_fill()
-        self.last_five_years_dividend(self)
-        self.last_five_years_EPS(self)
-        self.last_five_quarters_EPS(self)
-        self.get_EPS_TTM()
-        self.get_fina_data(self)
-        self.get_total_share(self)
-        self.profit_dedt(self,cls)
-    def calc(self):
-        self.calc_lfy_div_rate()
-        self.get_EPS_TTM()
-        self.rt['income_up'] = calc_income_up(self.dt['dividend'])
-        self.rt['profit_dedt_acc'] = calc_pft_acc(self.dt['profit_dedt_qtrs'])                         # 净利润季报增速
-        self.rt['gold_include'] = calc_gold_include(self.dt['ocfps'], self.dt['eps'])
-        self.rt['convert_rate'] = calc_convert_rate(self.dt['convert'])
-        self.rt['avg_div_rate'] = calc_avg_div_rates(self.rt['div_rate'])
-        self.rt['last_year_div'] = round( self.dt['dividend'][1]/self.rt['convert_rate'], 3)           # 最新年度分红
-    def calc_cp(self):
-        self.cp['stk_div_ratio'] = calc_stk_div_ratio(self.price, self.dt['dividend'], self.rt['convert_rate'])   # 当前股息率
-        self.cp['hope_div'] = round(self.price * hope_dividend_ratio, 3)          # 期望保底分红
-        if( self.rt['EPS_ttm'] != 0 ):
-            self.cp['safe_div'] = round( self.cp['hope_div']/self.rt['EPS_ttm'], 3)           # 保底分红率 = 期望保底分红 /EPS_TTM
-        else:
-            self.cp['safe_div'] = 9.99           # 保底分红率 = 期望保底分红 /EPS_TTM
-        self.cp['div_status'] = calc_div_status(self.cp['safe_div'], self.rt['avg_div_rate'])
-    def forecast(self,cls):
-        start_date = other_day(self.dt['profit_dedt_qtrs'][0], 1)
-        df = get_forecast(self.id, start_date)
-        return(df)
-    def express(self,cls):
-        start_date = other_day(self.dt['profit_dedt_qtrs'][0], 1)
-        df = get_express(self.id, start_date)
-        return(df)
-    def profit_dedt(self):
-        years = get_last_x_years(5)
-        req = False
-        if( 'profit_dedt_years' in self.dt ):
-            if( self.dt['profit_dedt_years'][0] != get_last_x_years(5)[0] ):
-                req = True
-        else:
-            req = True
-        if( req ):    
-            profit_dedt = profit_dedt_last_five_years(self.id, years)
-            self.dt['profit_dedt_years'] = profit_dedt
+
 class RawData():
     ts.set_token(TOKEN)
     pro = ts.pro_api()
@@ -509,6 +365,7 @@ class RawData():
     df_balancesheet = pd.DataFrame()
     df_forecast = pd.DataFrame()
     df_express = pd.DataFrame()
+    cnt = 0
     def reset(self, cls):
         cls.df_query = pd.DataFrame()
         df_dividend = pd.DataFrame()
@@ -540,19 +397,27 @@ class RawData():
         return(df)
     def req_tushare_query(self, cls, code, period):
         get = False
+        print('----', cls.df_query.shape[0])
         if(cls.df_query.shape[0] != 0):
             for i in range(cls.df_query.shape[0]):
                 if( cls.df_query.iloc[i]['end_date'] == period ):
                     df = cls.df_query.iloc[[i]]
                     get = True
+                    print('smart work !')
                     break
         if( get == False ):
             mode = 'query'
             para = []
+            print(code, '-', period)
+            cls.cnt += 1
+            if( cls.cnt % 10 == 0 ):
+                print('cnt:', cls.cnt)
             para.append(get_t_s_id(code))
             para.append(period)
             df = self.req_tushare(cls, mode, para)
-            cls.df_query = cls.df_query.append(df, ignore_index=True)
+            if( df.shape[0] != 0 ):
+                cls.df_query = cls.df_query.append(df, ignore_index=True)
+        print('====', cls.df_query.shape[0])
         return(df)
     def req_stock_basic(self, cls):
         if(cls.df_stock_basic.shape[0] == 0):
@@ -604,6 +469,145 @@ class RawData():
             para.append('ann_date, end_date, n_income, diluted_eps, yoy_tp, yoy_eps')
             cls.df_express = self.req_tushare(cls, mode, para)
         return(cls.df_express)
+class Share():
+    raw_data = RawData()
+    def __init__(self):
+        self.id = ''
+        self.name =''
+        self.price = 0.0
+        self.flag = {}
+        self.dt = {}          # 原始数据
+        self.rt = {}          # 计算结果
+        self.cp = {}          # 与price相关的计算结果
+#    @classmethod
+    def name_price_fill(self):
+        self.name, self.price = get_name_price(self.id)
+    def nmcard(self):
+        return(self.id + '[' + self.name + ']')
+    def stock_basic_fill(self, cls):
+        rd = cls.raw_data
+        df = rd.req_stock_basic(rd)
+        for i in range(df.shape[0]):
+            if( df.loc[i]['symbol'] == self.id ):
+                self.dt['industry'] = df.loc[i]['industry']
+                self.dt['area'] = df.loc[i]['area']
+                self.dt['list_date'] = df.loc[i]['list_date']
+                break
+        return()
+    def last_five_years_dividend(self, cls):
+        dividends_last, dq_div = dividends_for_stock(cls.raw_data, self.id, get_today())
+        self.dt['dividend'] = dividends_last
+        for i in range(6):
+            self.dt['convert'] = ['', 0.0, 0.0, 0.0]   # 转送股
+            if( len(dq_div) != 0 ):
+                for i in range(4):
+                    if( not is_pseudo_number(dq_div[0][i]) ):
+                        self.dt['convert'][i] = dq_div[0][i]
+    def last_five_years_EPS(self, cls):
+        year = get_last_x_years(5)
+        epss = eps_these_years(cls.raw_data, self.id, year)
+        self.dt['EPS'] = epss
+    def calc_lfy_div_rate(self):         # 类内计算 --- 计算5年分红率
+        dr = []
+        if(self.dt['EPS'][0] == self.dt['dividend'][0]):
+            dr.append(self.dt['EPS'][0])
+            for i in range(1, 6):
+                if( self.dt['dividend'][i] == 0.0 ):
+                    div_rate = 0.0
+                else:
+                    if(not is_pseudo_number(self.dt['EPS'][i])):
+                        div_rate = self.dt['dividend'][i] / self.dt['EPS'][i]
+                    else:
+                        div_rate = -1.0
+                dr.append(round(div_rate, 4))
+        else:
+            print('--- wrong in func lfy_div_rate() ---')
+        self.rt['div_rate'] = dr
+    def last_five_quarters_EPS(self):
+        qs_eps = eps_these_quarters(self.id)
+        self.dt['EPS_qtr'] = qs_eps
+    def get_EPS_TTM(self):
+        last_qtrs = last_eight_qtrs(self.dt['EPS_qtr'][0])
+        if( last_qtrs[0][4:8] == '1231' ):
+            eps_ttm = self.dt['EPS_qtr'][1]
+        else:
+            eps_q = self.dt['EPS_qtr']
+            for i in range(2,6):
+                if( last_qtrs[i-1][4:8] == '1231'):
+                    eps_ttm = eps_q[1] + eps_q[i] - eps_q[5]
+                    break
+        self.rt['EPS_ttm'] = round(eps_ttm, 3)
+    def get_fina_data(self):
+        rt = fina_indicator(self)
+        if( 'pft' in rt ):
+            self.dt['profit_dedt_qtrs'] = rt['pft_qtr']
+        else:
+            self.dt['profit_dedt_qtrs'] = 0
+        if( 'ocfps' in rt ):
+            self.dt['ocfps'] = rt['ocfps']
+        else:
+            self.dt['ocfps'] = None
+        if( 'eps' in rt ):
+            self.dt['eps'] = rt['eps']
+        else:
+            self.dt['eps'] = 0.0
+        if( 'current_ratio' in rt ):
+            self.dt['current_ratio'] = rt['current_ratio']
+        else:
+            self.dt['current_ratio'] = 1
+    def get_total_share(self):              # 总股本
+        rd = RawData()
+        df = rd.req_balancesheet(rd, self.id)
+        if( not is_pseudo_number(df.iloc[0]['total_share']) ):
+            self.dt['total_share'] = df.iloc[0]['total_share']
+        else:
+            self.dt['total_share'] = None
+    def get_base(self, cls):
+        self.name_price_fill()
+        self.stock_basic_fill(cls)
+        self.last_five_years_dividend(cls)
+        self.last_five_years_EPS(cls)
+        self.last_five_quarters_EPS()
+        self.get_EPS_TTM()
+        self.get_fina_data()
+        self.get_total_share()
+        self.profit_dedt()
+    def calc(self):
+        self.calc_lfy_div_rate()
+        self.get_EPS_TTM()
+        self.rt['income_up'] = calc_income_up(self.dt['dividend'])
+        self.rt['profit_dedt_acc'] = calc_pft_acc(self.dt['profit_dedt_qtrs'])                         # 净利润季报增速
+        self.rt['gold_include'] = calc_gold_include(self.dt['ocfps'], self.dt['eps'])
+        self.rt['convert_rate'] = calc_convert_rate(self.dt['convert'])
+        self.rt['avg_div_rate'] = calc_avg_div_rates(self.rt['div_rate'])
+        self.rt['last_year_div'] = round( self.dt['dividend'][1]/self.rt['convert_rate'], 3)           # 最新年度分红
+    def calc_cp(self):
+        self.cp['stk_div_ratio'] = calc_stk_div_ratio(self.price, self.dt['dividend'], self.rt['convert_rate'])   # 当前股息率
+        self.cp['hope_div'] = round(self.price * hope_dividend_ratio, 3)          # 期望保底分红
+        if( self.rt['EPS_ttm'] != 0 ):
+            self.cp['safe_div'] = round( self.cp['hope_div']/self.rt['EPS_ttm'], 3)           # 保底分红率 = 期望保底分红 /EPS_TTM
+        else:
+            self.cp['safe_div'] = 9.99           # 保底分红率 = 期望保底分红 /EPS_TTM
+        self.cp['div_status'] = calc_div_status(self.cp['safe_div'], self.rt['avg_div_rate'])
+    def forecast(self):
+        start_date = other_day(self.dt['profit_dedt_qtrs'][0], 1)
+        df = get_forecast(self.id, start_date)
+        return(df)
+    def express(self):
+        start_date = other_day(self.dt['profit_dedt_qtrs'][0], 1)
+        df = get_express(self.id, start_date)
+        return(df)
+    def profit_dedt(self):
+        years = get_last_x_years(5)
+        req = False
+        if( 'profit_dedt_years' in self.dt ):
+            if( self.dt['profit_dedt_years'][0] != get_last_x_years(5)[0] ):
+                req = True
+        else:
+            req = True
+        if( req ):    
+            profit_dedt = profit_dedt_last_five_years(self.id, years)
+            self.dt['profit_dedt_years'] = profit_dedt
 
     
     
