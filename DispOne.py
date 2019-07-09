@@ -8,7 +8,6 @@ ShareBank = read_data(fn)
 code = '000895'
 flag = ''
 count = 0
-
 for i in range( len(ShareBank) ):
     s = ShareBank[i]
     if( s.id == code ):
@@ -20,5 +19,4 @@ for i in range( len(ShareBank) ):
         count += 1
         print(i, '[max:', len(ShareBank), ']: ', s.nmcard(), '---flag---:', s.flag)
         print('   ', s.dt,'\n   ', s.rt,'\n   ', s.cp)
-
 print(count, '\n finished')

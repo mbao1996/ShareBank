@@ -6,8 +6,12 @@ from lib import *
 
 fn = work_catalog + bank_name
 ShareBank = read_data(fn)
+#save_data(fn, ShareBank)
+
+
 flag = 'attention'
 cnt = 0
+'''
 row_start = 0     # adjustable
 for i in range(row_start, len(ShareBank)):
     s = ShareBank[i]
@@ -24,5 +28,5 @@ for i in range(row_start, len(ShareBank)):
         s.calc_cp()
 #        save_data(fn, ShareBank)
 #save_data(fn, ShareBank)
-
+'''
 print(cnt, '\n finished')

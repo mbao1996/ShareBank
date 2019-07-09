@@ -23,13 +23,20 @@ def has_flag(s, flag):
 
 ts.set_token(TOKEN)
 pro = ts.pro_api()
-s = ShareBank[8]
+#s = ShareBank[8]
 cnt = 0
 for i in range(len(ShareBank)):
     s = ShareBank[i]
     if( has_flag(s, flag) ):
+        df = s.express(s)
         cnt += 1
-        print(s.nmcard(), s.flag)
+        if( df.shape[0] != 0 ):
+            for j in range(df.shape[0] ):
+                if( df.iloc[j]['end_date'] == '20190630'):
+                    print(s.nmcard(), s.flag)
+                    print(df)
+        if( cnt >= 99 ):
+            break
 print(cnt)
 
 

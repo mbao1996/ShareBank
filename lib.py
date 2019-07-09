@@ -326,18 +326,11 @@ def calc_stk_div_ratio(price, dividend, convert_rate):     # 当前股息率
 def get_forecast(code, start_date):
     rd = RawData()
     df = rd.req_forecast(rd, code, start_date)
-    if( df.shape[0] != 0 ):
-        print(df)
-        print('----------forecast-----------')
-def get_express(code, pro):
-    s_date = last_qtr(get_today())[0:6] + '01'
-    df = pro.express(ts_code=get_t_s_id(code), start_date=s_date, end_date=get_today(), fields='ann_date, end_date, n_income, diluted_eps, yoy_tp, yoy_eps')
-    for dfr in df.iterrows():
-        dt = dfr[1]
-        print('--- start: ', s_date, ' ## ', end='')
-        if( len(dt) != 0 ):
-            print(dt)
-        print('[]')
+    return(df)
+def get_express(code, start_date):
+    rd = RawData()
+    df = rd.req_express(rd, code, start_date)
+    return(df)
 def profit_dedt_last_five_years(code, years):
     profit_dedt = []
     profit_dedt.append(years[0])
@@ -370,11 +363,6 @@ def fill_flag(s):
             flag = 'Att'
     return(flag)
 class Share():
-    df_stock_basic = None           # can be delete
-    has_stock_basic = False         # can be delete
-    today = get_today()
-    ts.set_token(TOKEN)
-    pro = ts.pro_api()
     def __init__(self):
         self.id = ''
         self.name =''
@@ -399,7 +387,7 @@ class Share():
                 break
         return()
     def last_five_years_dividend(self,cls):
-        dividends_last, dq_div = dividends_for_stock(self.id, cls.pro, cls.today)
+        dividends_last, dq_div = dividends_for_stock(self.id, cls.pro, get_today())
         self.dt['dividend'] = dividends_last
         for i in range(6):
             self.dt['convert'] = ['', 0.0, 0.0, 0.0]   # 转送股
@@ -495,9 +483,12 @@ class Share():
         self.cp['div_status'] = calc_div_status(self.cp['safe_div'], self.rt['avg_div_rate'])
     def forecast(self,cls):
         start_date = other_day(self.dt['profit_dedt_qtrs'][0], 1)
-        get_forecast(self.id, start_date)
+        df = get_forecast(self.id, start_date)
+        return(df)
     def express(self,cls):
-        get_express(self.id, cls.pro)
+        start_date = other_day(self.dt['profit_dedt_qtrs'][0], 1)
+        df = get_express(self.id, start_date)
+        return(df)
     def profit_dedt(self):
         years = get_last_x_years(5)
         req = False
@@ -517,11 +508,13 @@ class RawData():
     df_dividend = pd.DataFrame()
     df_balancesheet = pd.DataFrame()
     df_forecast = pd.DataFrame()
+    df_express = pd.DataFrame()
     def reset(self, cls):
         cls.df_query = pd.DataFrame()
         df_dividend = pd.DataFrame()
         df_balancesheet = pd.DataFrame()
         df_forecast = pd.DataFrame()
+        df_express = pd.DataFrame()
     def req_tushare(self, cls, mode, para):
         if( mode == 'query'):
             try:
@@ -537,6 +530,8 @@ class RawData():
             df = cls.pro.balancesheet(ts_code=get_t_s_id(para[0]), start_date=para[1], end_date=get_today(), fields=para[2])
         elif( mode == 'forecast' ):
             df = cls.pro.forecast(ts_code=get_t_s_id(para[0]), start_date=para[1], end_date=para[2], fields=para[3])
+        elif( mode == 'express' ):
+            df = cls.pro.express(ts_code=get_t_s_id(para[0]), start_date=para[1], end_date=para[2], fields=para[3])
         else:
             df = None
             print('mode:', mode, ' not exist.')
@@ -599,4 +594,16 @@ class RawData():
             para.append('type, end_date, p_change_min, p_change_max, net_profit_min, net_profit_max')
             cls.df_forecast = self.req_tushare(cls, mode, para)
         return(cls.df_forecast)
+    def req_express(self, cls, code, start_date):  
+        if(cls.df_express.shape[0] == 0):
+            mode = 'express'
+            para = []
+            para.append(code)
+            para.append(start_date)
+            para.append(get_today())
+            para.append('ann_date, end_date, n_income, diluted_eps, yoy_tp, yoy_eps')
+            cls.df_express = self.req_tushare(cls, mode, para)
+        return(cls.df_express)
+
+    
     
