@@ -93,6 +93,10 @@ def is_pseudo_number(num):
         if( num != num ):
             isflag = True
     return(isflag)
+def del_dataframe(df):
+    idx = df._stat_axis.values.tolist()
+    for i in range(len(idx)):
+        df.drop(idx[i], inplace=True)
 def get_name_price(s_code):                   # get name and current price
     url = url_quotation_before + get_sina_id(s_code)
     req = Request(url)
@@ -367,11 +371,13 @@ class RawData():
     df_express = pd.DataFrame()
     cnt = 0
     def reset(self, cls):
+#        del_dataframe(cls.df_query)
         cls.df_query = pd.DataFrame()
-        df_dividend = pd.DataFrame()
-        df_balancesheet = pd.DataFrame()
-        df_forecast = pd.DataFrame()
-        df_express = pd.DataFrame()
+        cls.df_dividend = pd.DataFrame()
+        cls.df_balancesheet = pd.DataFrame()
+        cls.df_forecast = pd.DataFrame()
+        cls.df_express = pd.DataFrame()
+        print('---del all---')
     def req_tushare(self, cls, mode, para):
         if( mode == 'query'):
             try:
@@ -397,7 +403,6 @@ class RawData():
         return(df)
     def req_tushare_query(self, cls, code, period):
         get = False
-        print('----', cls.df_query.shape[0])
         if(cls.df_query.shape[0] != 0):
             for i in range(cls.df_query.shape[0]):
                 if( cls.df_query.iloc[i]['end_date'] == period ):
@@ -408,16 +413,11 @@ class RawData():
         if( get == False ):
             mode = 'query'
             para = []
-            print(code, '-', period)
-            cls.cnt += 1
-            if( cls.cnt % 10 == 0 ):
-                print('cnt:', cls.cnt)
             para.append(get_t_s_id(code))
             para.append(period)
             df = self.req_tushare(cls, mode, para)
             if( df.shape[0] != 0 ):
                 cls.df_query = cls.df_query.append(df, ignore_index=True)
-        print('====', cls.df_query.shape[0])
         return(df)
     def req_stock_basic(self, cls):
         if(cls.df_stock_basic.shape[0] == 0):
@@ -523,8 +523,8 @@ class Share():
         else:
             print('--- wrong in func lfy_div_rate() ---')
         self.rt['div_rate'] = dr
-    def last_five_quarters_EPS(self):
-        qs_eps = eps_these_quarters(self.id)
+    def last_five_quarters_EPS(self, cls):
+        qs_eps = eps_these_quarters(cls.raw_data, self.id)
         self.dt['EPS_qtr'] = qs_eps
     def get_EPS_TTM(self):
         last_qtrs = last_eight_qtrs(self.dt['EPS_qtr'][0])
@@ -537,9 +537,9 @@ class Share():
                     eps_ttm = eps_q[1] + eps_q[i] - eps_q[5]
                     break
         self.rt['EPS_ttm'] = round(eps_ttm, 3)
-    def get_fina_data(self):
-        rt = fina_indicator(self)
-        if( 'pft' in rt ):
+    def get_fina_data(self, cls):
+        rt = fina_indicator(cls.raw_data, self.id)
+        if( 'pft_qtr' in rt ):
             self.dt['profit_dedt_qtrs'] = rt['pft_qtr']
         else:
             self.dt['profit_dedt_qtrs'] = 0
@@ -567,15 +567,16 @@ class Share():
         self.stock_basic_fill(cls)
         self.last_five_years_dividend(cls)
         self.last_five_years_EPS(cls)
-        self.last_five_quarters_EPS()
+        self.last_five_quarters_EPS(cls)
         self.get_EPS_TTM()
-        self.get_fina_data()
+        self.get_fina_data(cls)
         self.get_total_share()
         self.profit_dedt()
     def calc(self):
         self.calc_lfy_div_rate()
         self.get_EPS_TTM()
         self.rt['income_up'] = calc_income_up(self.dt['dividend'])
+        print('+++', self.dt['profit_dedt_qtrs'])
         self.rt['profit_dedt_acc'] = calc_pft_acc(self.dt['profit_dedt_qtrs'])                         # 净利润季报增速
         self.rt['gold_include'] = calc_gold_include(self.dt['ocfps'], self.dt['eps'])
         self.rt['convert_rate'] = calc_convert_rate(self.dt['convert'])
