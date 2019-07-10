@@ -93,10 +93,6 @@ def is_pseudo_number(num):
         if( num != num ):
             isflag = True
     return(isflag)
-def del_dataframe(df):
-    idx = df._stat_axis.values.tolist()
-    for i in range(len(idx)):
-        df.drop(idx[i], inplace=True)
 def get_name_price(s_code):                   # get name and current price
     url = url_quotation_before + get_sina_id(s_code)
     req = Request(url)
@@ -371,13 +367,11 @@ class RawData():
     df_express = pd.DataFrame()
     cnt = 0
     def reset(self, cls):
-#        del_dataframe(cls.df_query)
         cls.df_query = pd.DataFrame()
         cls.df_dividend = pd.DataFrame()
         cls.df_balancesheet = pd.DataFrame()
         cls.df_forecast = pd.DataFrame()
         cls.df_express = pd.DataFrame()
-        print('---del all---')
     def req_tushare(self, cls, mode, para):
         if( mode == 'query'):
             try:
@@ -399,7 +393,7 @@ class RawData():
             df = None
             print('mode:', mode, ' not exist.')
         # sleep
-        time.sleep(1)
+        time.sleep(0.5)
         return(df)
     def req_tushare_query(self, cls, code, period):
         get = False
@@ -408,7 +402,6 @@ class RawData():
                 if( cls.df_query.iloc[i]['end_date'] == period ):
                     df = cls.df_query.iloc[[i]]
                     get = True
-                    print('smart work !')
                     break
         if( get == False ):
             mode = 'query'
@@ -576,7 +569,6 @@ class Share():
         self.calc_lfy_div_rate()
         self.get_EPS_TTM()
         self.rt['income_up'] = calc_income_up(self.dt['dividend'])
-        print('+++', self.dt['profit_dedt_qtrs'])
         self.rt['profit_dedt_acc'] = calc_pft_acc(self.dt['profit_dedt_qtrs'])                         # 净利润季报增速
         self.rt['gold_include'] = calc_gold_include(self.dt['ocfps'], self.dt['eps'])
         self.rt['convert_rate'] = calc_convert_rate(self.dt['convert'])

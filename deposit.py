@@ -10,21 +10,19 @@ ShareBank = read_data(fn)
 flag = ['goodu', 'holding']
 cnt = 0
 row_start = 0     # adjustable
-#for i in range(row_start, len(ShareBank)):
-for i in range(1, 4):
+for i in range(row_start, len(ShareBank)):
     s = ShareBank[i]
     s.raw_data.reset(s.raw_data)
     if( has_flag(s, flag) ):
         cnt += 1
         s.name_price_fill()
-        s.calc_cp()
-        print(i, '[max:', len(ShareBank), ']: ', s.nmcard(), '---flag---:', s.flag)
         s.get_base(s)
         s.calc()
         s.calc_cp()
-        print(i, '[max:', len(ShareBank), ']: ', s.nmcard(), '---flag---:', s.flag)
+        print(i,'(',cnt,') [max:', len(ShareBank), ']: ', s.nmcard(), '---flag---:', s.flag)
         print('   ', s.dt,'\n   ', s.rt,'\n   ', s.cp)
-#        save_data(fn, ShareBank)
+        save_data(fn, ShareBank)
 #save_data(fn, ShareBank)
+print(cnt)
 
-print(cnt, '\n finished')
+print('\n finished')
