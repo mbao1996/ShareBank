@@ -54,5 +54,5 @@ for i in range(10):
     s = ShareBank[i]
     print(s.id,'[', s.name,']', s.dt['industry'], s.dt['area'], s.dt['list_date'])
 '''    
-#test    
+ 
 print('\n finished')
