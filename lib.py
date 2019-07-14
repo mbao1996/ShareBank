@@ -356,6 +356,28 @@ def fill_flag(s):
             flag = 'Att'
     return(flag)
 
+class time_ctl():
+    mem = time.strftime('%H:%M:%S', time.localtime(time.time()))
+    cnt = 0
+    wait = False
+    def t_wait(self, cls):
+        tm = time.strftime('%H:%M:%S', time.localtime(time.time()))
+        cls.wait = False
+        cls.cnt += 1
+        if( cls.cnt >= 0 ):
+            while( tm[3:5] == cls.mem[3:5] ):
+                tm = time.strftime('%H:%M:%S', time.localtime(time.time()))
+                time.sleep(1)
+            print('')
+            cls.mem = time.strftime('%H:%M:%S', time.localtime(time.time()))
+            cls.cnt = 0
+            cls.wait = True    
+        else:
+            if( tm[3:5] != cls.mem[3:5] ):
+                cls.mem = time.strftime('%H:%M:%S', time.localtime(time.time()))
+                cls.cnt = 0
+                cls.wait = True    
+        return(cls.wait)
 class RawData():
     ts.set_token(TOKEN)
     pro = ts.pro_api()
@@ -365,6 +387,7 @@ class RawData():
     df_balancesheet = pd.DataFrame()
     df_forecast = pd.DataFrame()
     df_express = pd.DataFrame()
+    tc = time_ctl()
     cnt = 0
     def reset(self, cls):
         cls.df_query = pd.DataFrame()
@@ -393,7 +416,8 @@ class RawData():
             df = None
             print('mode:', mode, ' not exist.')
         # sleep
-        time.sleep(0.5)
+#        cls.tc.t_wait(cls.tc)
+        time.sleep(0.76)
         return(df)
     def req_tushare_query(self, cls, code, period):
         get = False
