@@ -356,28 +356,30 @@ def fill_flag(s):
             flag = 'Att'
     return(flag)
 
-class time_ctl():
-    mem = time.strftime('%H:%M:%S', time.localtime(time.time()))
+class delay_ctl():
     cnt = 0
-    wait = False
-    def t_wait(self, cls):
-        tm = time.strftime('%H:%M:%S', time.localtime(time.time()))
-        cls.wait = False
+    time_interval = 0
+    freq_interval = 0
+    tm_bf = []
+    def init(self, cls, time_interval, freq_interval):
+        cls.cnt = 0
+        cls.time_interval = time_interval
+        cls.freq_interval =freq_interval
+        tm = datetime.datetime.now() - datetime.timedelta(seconds = time_interval * 2)
+        for i in range(freq_interval):
+            cls.tm_bf.append(tm)
+    def ctl(self, cls):
+        tm = datetime.datetime.now()
+        while( (tm-cls.tm_bf[cls.cnt]).seconds <= cls.time_interval ):
+            time.sleep(1)
+            tm = datetime.datetime.now()
+        cls.tm_bf[cls.cnt] = tm
         cls.cnt += 1
-        if( cls.cnt >= 0 ):
-            while( tm[3:5] == cls.mem[3:5] ):
-                tm = time.strftime('%H:%M:%S', time.localtime(time.time()))
-                time.sleep(1)
-            print('')
-            cls.mem = time.strftime('%H:%M:%S', time.localtime(time.time()))
+        if( cls.cnt == cls.freq_interval ):
             cls.cnt = 0
-            cls.wait = True    
-        else:
-            if( tm[3:5] != cls.mem[3:5] ):
-                cls.mem = time.strftime('%H:%M:%S', time.localtime(time.time()))
-                cls.cnt = 0
-                cls.wait = True    
-        return(cls.wait)
+    def prt(self, cls):
+        for i in range( cls.freq_interval ):
+            print(cls.tm_bf[i])
 class RawData():
     ts.set_token(TOKEN)
     pro = ts.pro_api()
@@ -387,8 +389,8 @@ class RawData():
     df_balancesheet = pd.DataFrame()
     df_forecast = pd.DataFrame()
     df_express = pd.DataFrame()
-    tc = time_ctl()
-    cnt = 0
+    dc = delay_ctl()
+    dc.init(dc, 60, 80)
     def reset(self, cls):
         cls.df_query = pd.DataFrame()
         cls.df_dividend = pd.DataFrame()
@@ -416,8 +418,8 @@ class RawData():
             df = None
             print('mode:', mode, ' not exist.')
         # sleep
-#        cls.tc.t_wait(cls.tc)
-        time.sleep(0.76)
+        cls.dc.ctl(cls.dc)
+#        time.sleep(0.76)
         return(df)
     def req_tushare_query(self, cls, code, period):
         get = False
