@@ -9,7 +9,7 @@ ShareBank = read_data(fn)
 
 flag = ['goodu', 'holding']
 cnt = 0
-row_start = 6     # adjustable
+row_start = 34     # adjustable
 for i in range(row_start, len(ShareBank)):
     s = ShareBank[i]
     s.raw_data.reset(s.raw_data)

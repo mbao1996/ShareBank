@@ -329,7 +329,7 @@ def profit_dedt_last_five_years(rd, code, years):
     profit_dedt = []
     profit_dedt.append(years[0])
     for i in range(len(years)):
-        df = rd.req_tushare_query(code, years[i])
+        df = rd.req_tushare_query(rd, code, years[i])
         profit_dedt.append(df.iloc[0]['profit_dedt'])
     return(profit_dedt)        
 def pft_3_years_increase(s):
@@ -588,7 +588,7 @@ class Share():
         self.get_EPS_TTM()
         self.get_fina_data(cls)
         self.get_total_share()
-        self.profit_dedt()
+        self.profit_dedt(cls)
     def calc(self):
         self.calc_lfy_div_rate()
         self.get_EPS_TTM()
@@ -614,7 +614,7 @@ class Share():
         start_date = other_day(self.dt['profit_dedt_qtrs'][0], 1)
         df = get_express(self.id, start_date)
         return(df)
-    def profit_dedt(self):
+    def profit_dedt(self, cls):
         years = get_last_x_years(5)
         req = False
         if( 'profit_dedt_years' in self.dt ):
@@ -623,7 +623,7 @@ class Share():
         else:
             req = True
         if( req ):    
-            profit_dedt = profit_dedt_last_five_years(self.id, years)
+            profit_dedt = profit_dedt_last_five_years(cls.raw_data, self.id, years)
             self.dt['profit_dedt_years'] = profit_dedt
 
     
