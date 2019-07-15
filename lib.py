@@ -370,8 +370,10 @@ class delay_ctl():
             cls.tm_bf.append(tm)
     def ctl(self, cls):
         tm = datetime.datetime.now()
-        while( (tm-cls.tm_bf[cls.cnt]).seconds <= cls.time_interval ):
-            time.sleep(1)
+        tm_diff = cls.time_interval - (tm-cls.tm_bf[cls.cnt]).seconds
+        if( tm_diff > 0 ):
+            print('--- sleep: ', tm_diff, ' seconds. ---')
+            time.sleep(tm_diff + 0.1)
             tm = datetime.datetime.now()
         cls.tm_bf[cls.cnt] = tm
         cls.cnt += 1
