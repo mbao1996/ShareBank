@@ -189,20 +189,6 @@ def last_qtr(data_from):
         if( int(iQtr) <= int(data_from) ):
             last_quarter = iQtr
     return(last_quarter)
-def get_last5qtrs():
-    last5qtrs = []
-    last5qtrs.append(last_qtr(get_today()))
-    for i in range(4):
-        for j in range(4):
-            if( last5qtrs[i][4:8] == Quarter[j]): 
-                if( j == 0 ):
-                    x = int(str(last5qtrs[i][0:4])) - 1
-                    x = str(x) + Quarter[3]
-                else:
-                    x = int(str(last5qtrs[i][0:4]))
-                    x = str(x) + Quarter[j-1]
-                last5qtrs.append(x)    
-    return(last5qtrs)
 def last_eight_qtrs(data_from):
     last8qtrs = []
     last8qtrs.append(last_qtr(data_from))
@@ -615,13 +601,13 @@ class Share():
         else:
             self.cp['safe_div'] = 9.99           # 保底分红率 = 期望保底分红 /EPS_TTM
         self.cp['div_status'] = calc_div_status(self.cp['safe_div'], self.rt['avg_div_rate'])
-    def forecast(self):
+    def forecast(self, cls):
         start_date = other_day(self.dt['profit_dedt_qtrs'][0], 1)
-        df = get_forecast(self.id, start_date)
+        df = get_forecast(cls.raw_data, self.id, start_date)
         return(df)
-    def express(self):
+    def express(self, cls):
         start_date = other_day(self.dt['profit_dedt_qtrs'][0], 1)
-        df = get_express(self.id, start_date)
+        df = get_express(cls.raw_data, self.id, start_date)
         return(df)
     def profit_dedt(self, cls):
         years = get_last_x_years(5)
