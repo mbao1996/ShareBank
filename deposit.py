@@ -14,7 +14,7 @@ for i in range(row_start, len(ShareBank)):
     s = ShareBank[i]
     s.raw_data.reset(s.raw_data)
 #    if( has_flag(s, flag) ):
-    if( True ):
+    if( s.dt['profit_dedt_qtrs'][0] != last_qtr(get_today()) ):
         cnt += 1
         s.name_price_fill()
         s.get_base(s)
