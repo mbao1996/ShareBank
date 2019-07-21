@@ -39,10 +39,10 @@ except Exception as e:
 ws = wb['Sheet1']
 
 gd_flag = 'grade'
-flag = ['goodu', 'holding']
+flag = ['goodu', 'holding', 'attention']
 
 xl_row = row_start
-
+cnt = 0
 for i in range( len(ShareBank) ):
     s = ShareBank[i]
     if( has_flag(s, flag) ):
@@ -72,11 +72,13 @@ for i in range( len(ShareBank) ):
             ws.cell(xl_row, col_grade).value = s.flag[gd_flag]
         else: 
             ws.cell(xl_row, col_grade).value = -1
-
+        cnt += 1
         xl_row += 1
 try:
     wb.save(fn_wr)
 except Exception as e:
     print(str(e))
     os._exit(0)
+    
+print('---count: ', cnt)
 print('\n finished')

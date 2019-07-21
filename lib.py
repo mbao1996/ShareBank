@@ -13,6 +13,7 @@ from define import *
 
 my_flag = 'goodu'
 hd_flag = 'holding'
+att_flag = 'attention'
 
 def read_data(fn):
     data = []
@@ -348,12 +349,16 @@ def fill_flag(s):
     if( hd_flag in s.flag ):
         if( s.flag[hd_flag] == 'Y' ):
             flag = 'H'
-    if( my_flag in s.flag ):
+    elif( my_flag in s.flag ):
         if( s.flag[my_flag] == 'Y' ):
             flag = 'Du'
-    if( my_flag in s.flag and hd_flag in s.flag ):
-        if( s.flag[my_flag] == 'Y' and s.flag[hd_flag] == 'Y' ):
-            flag = 'Att'
+    elif( att_flag in s.flag ):
+        if( s.flag[att_flag] == 'Y' ):
+            flag = 'att'
+    elif( len(s.flag) != 0 ):
+        flag = 'com'
+    else:
+        flag = ''
     return(flag)
 
 class delay_ctl():
