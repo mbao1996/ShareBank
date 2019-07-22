@@ -221,7 +221,10 @@ def eps_these_quarters(rd, code):                  # 这些季度的每股收益
         if( len(df) != 0 ):
             if( count==0 ):
                 EPSs = [last_qtrs[i]]
-            EPSs.append(df.iloc[0]['eps'])
+            if( is_pseudo_number(df.iloc[0]['eps']) ):
+                EPSs.append(0.0)
+            else:
+                EPSs.append(df.iloc[0]['eps'])
             count += 1
             if( count >= 5 ):
                 break
@@ -264,7 +267,7 @@ def calc_income_up(dividend):                   #  计算稳升
             up = 'N'
     return(up)
 def calc_pft_acc(pft):                     # 计算季报增速
-    if( len(pft) > 5 ):
+    if( len(pft) > 5 and pft[5] != None ):
         return( round(pft[1]/pft[5]-1, 4) )
     else:
         return(-1)
@@ -317,7 +320,10 @@ def profit_dedt_last_five_years(rd, code, years):
     profit_dedt.append(years[0])
     for i in range(len(years)):
         df = rd.req_tushare_query(rd, code, years[i])
-        profit_dedt.append(df.iloc[0]['profit_dedt'])
+        if( len(df) == 0 ):
+            profit_dedt.append(0.0)
+        else:
+            profit_dedt.append(df.iloc[0]['profit_dedt'])
     return(profit_dedt)        
 def pft_3_years_increase(s):
     rt = ''
