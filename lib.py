@@ -15,6 +15,22 @@ my_flag = 'goodu'
 hd_flag = 'holding'
 att_flag = 'attention'
 
+def is_number(variate):
+    flag = False
+    if isinstance(variate,int):
+        flag = True
+    elif isinstance(variate,float):
+        flag = True
+    else:
+        flag = False
+    return(flag)
+def is_list_number(list, start):
+    if( start > len(list) ):
+        return(False)
+    for i in range(start, len(list)):
+        if( not is_number(list[i]) ):
+            return(False)
+    return(True)
 def read_data(fn):
     data = []
     try:
@@ -77,7 +93,7 @@ def get_t_s_id(sID):
     else:
         print('in get_t_s_name the id :', sID)
     return(stkID)  
-def has_flag(share_bank, flag):
+def has_flags(share_bank, flag):
     has = False
     for i in range(len(flag)):
         if( flag[i] in share_bank.flag ):
@@ -221,10 +237,10 @@ def eps_these_quarters(rd, code):                  # 这些季度的每股收益
         if( len(df) != 0 ):
             if( count==0 ):
                 EPSs = [last_qtrs[i]]
-            if( is_pseudo_number(df.iloc[0]['eps']) ):
-                EPSs.append(0.0)
-            else:
+            if( is_number(df.iloc[0]['eps']) ):
                 EPSs.append(df.iloc[0]['eps'])
+            else:
+                EPSs.append('None')
             count += 1
             if( count >= 5 ):
                 break
@@ -294,11 +310,14 @@ def calc_avg_div_rates(div_rate):                   # 计算5年平均分红率
         return( round(rt/yr, 3) )
     else:
         return(0.0)
-def calc_div_status(safe_div, avg_div_rate):                      # 是否保底分红率小于5年平均分红率    
-    if( safe_div <= avg_div_rate ):
-        div_status = 'Y'
+def calc_div_status(safe_div, avg_div_rate):                     # 是否保底分红率小于5年平均分红率    
+    if( is_number(safe_div) and is_number(avg_div_rate) ):
+        if( safe_div <= avg_div_rate ):
+            div_status = 'Y'
+        else:
+            div_status = 'N'
     else:
-        div_status = 'N'
+        div_status = ''
     return(div_status)
 def calc_stk_div_ratio(price, dividend, convert_rate):     # 当前股息率
     L1 = is_pseudo_number(convert_rate)
@@ -548,13 +567,18 @@ class Share():
         last_qtrs = last_eight_qtrs(self.dt['EPS_qtr'][0])
         if( last_qtrs[0][4:8] == '1231' ):
             eps_ttm = self.dt['EPS_qtr'][1]
+            self.rt['EPS_ttm'] = round(eps_ttm, 3)
         else:
-            eps_q = self.dt['EPS_qtr']
-            for i in range(2,6):
-                if( last_qtrs[i-1][4:8] == '1231'):
-                    eps_ttm = eps_q[1] + eps_q[i] - eps_q[5]
-                    break
-        self.rt['EPS_ttm'] = round(eps_ttm, 3)
+            if( is_list_number(self.dt['EPS_qtr'], 1) ):
+                eps_q = self.dt['EPS_qtr']
+                for i in range(2,6):
+                    if( last_qtrs[i-1][4:8] == '1231'):
+                        eps_ttm = eps_q[1] + eps_q[i] - eps_q[5]
+                        break
+                self.rt['EPS_ttm'] = round(eps_ttm, 3)    
+            else:
+                self.rt['EPS_ttm'] = 'None'
+                self.flag['data'] = 'EPS_qtr'
     def get_fina_data(self, cls):
         rt = fina_indicator(cls.raw_data, self.id)
         if( 'pft_qtr' in rt ):
@@ -602,10 +626,10 @@ class Share():
     def calc_cp(self):
         self.cp['stk_div_ratio'] = calc_stk_div_ratio(self.price, self.dt['dividend'], self.rt['convert_rate'])   # 当前股息率
         self.cp['hope_div'] = round(self.price * hope_dividend_ratio, 3)          # 期望保底分红
-        if( self.rt['EPS_ttm'] != 0 ):
+        if( (self.rt['EPS_ttm'] != 0) and is_number(self.rt['EPS_ttm']) ):
             self.cp['safe_div'] = round( self.cp['hope_div']/self.rt['EPS_ttm'], 3)           # 保底分红率 = 期望保底分红 /EPS_TTM
         else:
-            self.cp['safe_div'] = 9.99           # 保底分红率 = 期望保底分红 /EPS_TTM
+            self.cp['safe_div'] = 'None'           # 保底分红率 = 期望保底分红 /EPS_TTM
         self.cp['div_status'] = calc_div_status(self.cp['safe_div'], self.rt['avg_div_rate'])
     def forecast(self, cls):
         start_date = other_day(self.dt['profit_dedt_qtrs'][0], 1)
