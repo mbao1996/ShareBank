@@ -9,7 +9,7 @@ ShareBank = read_data(fn)
 
 flag = ['goodu', 'holding']
 cnt = 0
-row_start = 1390    # adjustable
+row_start = 2060    # adjustable
 for i in range(row_start, len(ShareBank)):
     s = ShareBank[i]
     s.raw_data.reset(s.raw_data)
@@ -23,7 +23,7 @@ for i in range(row_start, len(ShareBank)):
         s.calc_cp()
         print('(',cnt,')', i, '[max:', len(ShareBank), ']: ', s.nmcard(), '---flag---:', s.flag)
         print('   ', s.dt,'\n   ', s.rt,'\n   ', s.cp)
-#        save_data(fn, ShareBank)
+        save_data(fn, ShareBank)
     else:
         print('***skip*** (',cnt,')', i, '[max:', len(ShareBank), ']: ', s.nmcard(), '---flag---:', s.flag)
 

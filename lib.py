@@ -563,13 +563,14 @@ class Share():
     def last_five_quarters_EPS(self, cls):
         qs_eps = eps_these_quarters(cls.raw_data, self.id)
         self.dt['EPS_qtr'] = qs_eps
+        print('-----EPS_qtr------', qs_eps)
     def get_EPS_TTM(self):
         last_qtrs = last_eight_qtrs(self.dt['EPS_qtr'][0])
         if( last_qtrs[0][4:8] == '1231' ):
             eps_ttm = self.dt['EPS_qtr'][1]
             self.rt['EPS_ttm'] = round(eps_ttm, 3)
         else:
-            if( is_list_number(self.dt['EPS_qtr'], 1) ):
+            if( is_list_number(self.dt['EPS_qtr'], 1) and (len(self.dt['EPS_qtr']) == 6) ):
                 eps_q = self.dt['EPS_qtr']
                 for i in range(2,6):
                     if( last_qtrs[i-1][4:8] == '1231'):
