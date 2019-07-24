@@ -264,6 +264,9 @@ def fina_indicator(rd, code):           	  # 准备利润增速数据   每股�
                 # 基本每股收益
                 if( not is_pseudo_number(df.iloc[0]['eps']) ):
                     rt['eps'] = df.iloc[0]['eps']
+                # 每股净资产
+                if( not is_pseudo_number(df.iloc[0]['bps']) ):
+                    rt['bps'] = df.iloc[0]['bps']
                 # 流动比率
                 if( not is_pseudo_number(df.iloc[0]['current_ratio']) ):
                     rt['current_ratio'] = df.iloc[0]['current_ratio']
@@ -348,6 +351,17 @@ def profit_dedt_last_five_years(rd, code, years):
         else:
             profit_dedt.append(df.iloc[0]['profit_dedt'])
     return(profit_dedt, data_flag)        
+def indicator_last_five_years(rd, s, years):
+    roe = []
+    roe.append(years[0])
+    for i in range(len(years)):
+        df = rd.req_tushare_query(rd, s.id, years[i])
+        if( len(df) == 0 ):
+            roe.append(0.0)
+            s.flag['data'] = 'roe'
+        else:
+            roe.append(df.iloc[0]['roe'])
+    return(roe)        
 def pft_3_years_increase(s):
     rt = ''
     if( 'profit_dedt_years' in s.dt ):
@@ -605,6 +619,11 @@ class Share():
         else:
             self.dt['eps'] = 0.0
             self.flag['data'] = 'eps'
+        if( 'bps' in rt ):
+            self.dt['bps'] = rt['bps']
+        else:
+            self.dt['bps'] = 0.0
+            self.flag['data'] = 'bps'
         if( 'current_ratio' in rt ):
             self.dt['current_ratio'] = rt['current_ratio']
         else:
@@ -628,6 +647,7 @@ class Share():
         self.get_fina_data(cls)
         self.get_total_share()
         self.profit_dedt(cls)
+        self.indicator(cls)
     def calc(self):          # DEBUG HERE
         self.calc_lfy_div_rate()
         self.get_EPS_TTM()
@@ -666,6 +686,16 @@ class Share():
             self.dt['profit_dedt_years'] = profit_dedt
             if( not data_flag ):
                 self.flag['data'] = 'profit_dedt_years'
+    def indicator(self, cls):
+        years = get_last_x_years(5)
+        req = False
+        if( 'roe' in self.dt ):
+            if( self.dt['roe'][0] != get_last_x_years(5)[0] ):
+                req = True
+        else:
+            req = True
+        if( req ):    
+            self.dt['roe'] = indicator_last_five_years(cls.raw_data, self, years)
 
     
     

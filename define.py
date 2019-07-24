@@ -1,3 +1,4 @@
+#coding=gbk
 Quarter = ('0331', '0630', '0930', '1231')
 hope_dividend_ratio = 0.04
 ShareBank = []
@@ -10,18 +11,20 @@ TOKEN = 'c27f964551786735a0cebbc26a743d0e18b06e9181f2166632964e37'
 url_quotation_before = "http://hq.sinajs.cn/list="
 
 #######################################################
+#    dt['bps']                      每股净资产
 #    dt['convert']                  转送股
+#    dt['convert_ratio']            股份调整率
 #    dt['current_ratio']            流动比率
 #    dt['dividend']                 历年分红
+#    dt['eps']                      基本每股收益
 #    dt['industry']                 行业
 #    dt['ocfps']                    每股经营活动产生的现金流量净额
+#    dt['roe']                      ROE
 #    dt['total_share']              总股本
 #    dt['profit_dedt_qtrs']         最近几个季度扣除非经常性损益后的净利润
 #    dt['profit_dedt_years']        最近几年扣除非经常性损益后的净利润
 #    rt['avg_div_rate']             5年平均分红率
-#    rt['convert_rate']             股份调整率
 #    rt['div_rate']                 5年分红率
-#    rt['eps']                      基本每股收益
 #    rt['EPS_ttm']                  EPS_ttm
 #    rt['gold_include']             含金量
 #    rt['last_year_div']            最新年度分红
