@@ -195,7 +195,7 @@ def dividends_for_stock(rd, code, today):                   # get last 6 years
                 if( len(dqdiv) == 0 ):
                     dqdiv.append([dt['ex_date'], dt['stk_bo_rate'],dt['stk_co_rate'], dt['stk_div']])
                 else:
-                    print(u'---有转送!---')
+                    print(u'--- 历年有转送!---')
     return(Ddd, dqdiv)
 def last_qtr(data_from):
     last_year = int(data_from[0:4]) -1 
@@ -231,7 +231,8 @@ def eps_these_years(rd, code, year):              # 这些年的每股收益
     return(epss)        
 def eps_these_quarters(rd, code):                  # 这些季度的每股收益
     last_qtrs = last_eight_qtrs(get_today())
-    count = 0  
+    count = 0
+    data_flag = True
     for i in range(len(last_qtrs)):
         df = rd.req_tushare_query(rd, code, last_qtrs[i])
         if( len(df) != 0 ):
@@ -241,10 +242,11 @@ def eps_these_quarters(rd, code):                  # 这些季度的每股收益
                 EPSs.append(df.iloc[0]['eps'])
             else:
                 EPSs.append('None')
+                data_flag = False
             count += 1
             if( count >= 5 ):
                 break
-    return(EPSs)
+    return(EPSs, data_flag)
 def fina_indicator(rd, code):           	  # 准备利润增速数据   每股经营活动产生的现金流量净额 和 流动比率
     last_qtrs = last_eight_qtrs(get_today())
     # 准备利润增速数据
@@ -337,13 +339,15 @@ def get_express(rd, code, start_date):
 def profit_dedt_last_five_years(rd, code, years):
     profit_dedt = []
     profit_dedt.append(years[0])
+    data_flag = True
     for i in range(len(years)):
         df = rd.req_tushare_query(rd, code, years[i])
         if( len(df) == 0 ):
             profit_dedt.append(0.0)
+            data_flag = False
         else:
             profit_dedt.append(df.iloc[0]['profit_dedt'])
-    return(profit_dedt)        
+    return(profit_dedt, data_flag)        
 def pft_3_years_increase(s):
     rt = ''
     if( 'profit_dedt_years' in s.dt ):
@@ -544,6 +548,8 @@ class Share():
         year = get_last_x_years(5)
         epss = eps_these_years(cls.raw_data, self.id, year)
         self.dt['EPS'] = epss
+        if( not is_list_number(self.dt['EPS'], 1) ):
+            self.flag['data'] = 'EPS'
     def calc_lfy_div_rate(self):         # 类内计算 --- 计算5年分红率
         dr = []
         if(self.dt['EPS'][0] == self.dt['dividend'][0]):
@@ -561,9 +567,11 @@ class Share():
             print('--- wrong in func lfy_div_rate() ---')
         self.rt['div_rate'] = dr
     def last_five_quarters_EPS(self, cls):
-        qs_eps = eps_these_quarters(cls.raw_data, self.id)
+        qs_eps, data_flag = eps_these_quarters(cls.raw_data, self.id)
         self.dt['EPS_qtr'] = qs_eps
         print('-----EPS_qtr------', qs_eps)
+        if( not data_flag ):
+            self.flag['data'] = 'EPS_qtr'
     def get_EPS_TTM(self):
         last_qtrs = last_eight_qtrs(self.dt['EPS_qtr'][0])
         if( last_qtrs[0][4:8] == '1231' ):
@@ -579,25 +587,29 @@ class Share():
                 self.rt['EPS_ttm'] = round(eps_ttm, 3)    
             else:
                 self.rt['EPS_ttm'] = 'None'
-                self.flag['data'] = 'EPS_qtr'
+                self.flag['data'] = 'EPS_ttm'
     def get_fina_data(self, cls):
         rt = fina_indicator(cls.raw_data, self.id)
         if( 'pft_qtr' in rt ):
             self.dt['profit_dedt_qtrs'] = rt['pft_qtr']
         else:
             self.dt['profit_dedt_qtrs'] = 0
+            self.flag['data'] = 'profit_dedt_qtrs'
         if( 'ocfps' in rt ):
             self.dt['ocfps'] = rt['ocfps']
         else:
             self.dt['ocfps'] = None
+            self.flag['data'] = 'ocfps'
         if( 'eps' in rt ):
             self.dt['eps'] = rt['eps']
         else:
             self.dt['eps'] = 0.0
+            self.flag['data'] = 'eps'
         if( 'current_ratio' in rt ):
             self.dt['current_ratio'] = rt['current_ratio']
         else:
             self.dt['current_ratio'] = 1
+            self.flag['data'] = 'current_ratio'
     def get_total_share(self):              # 总股本
         rd = RawData()
         df = rd.req_balancesheet(rd, self.id)
@@ -605,6 +617,7 @@ class Share():
             self.dt['total_share'] = df.iloc[0]['total_share']
         else:
             self.dt['total_share'] = None
+            self.flag['data'] = 'total_share'
     def get_base(self, cls):
         self.name_price_fill()
         self.stock_basic_fill(cls)
@@ -615,7 +628,7 @@ class Share():
         self.get_fina_data(cls)
         self.get_total_share()
         self.profit_dedt(cls)
-    def calc(self):
+    def calc(self):          # DEBUG HERE
         self.calc_lfy_div_rate()
         self.get_EPS_TTM()
         self.rt['income_up'] = calc_income_up(self.dt['dividend'])
@@ -649,8 +662,10 @@ class Share():
         else:
             req = True
         if( req ):    
-            profit_dedt = profit_dedt_last_five_years(cls.raw_data, self.id, years)
+            profit_dedt, data_flag = profit_dedt_last_five_years(cls.raw_data, self.id, years)
             self.dt['profit_dedt_years'] = profit_dedt
+            if( not data_flag ):
+                self.flag['data'] = 'profit_dedt_years'
 
     
     
