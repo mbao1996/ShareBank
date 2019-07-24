@@ -29,6 +29,10 @@ col_flag = col_industry + 1
 col_last_dividend = col_flag + 1
 col_EPS_ttm = col_last_dividend + 1
 col_grade = col_EPS_ttm + 1
+col_bps = col_grade + 1
+col_PB = col_bps + 1
+col_PE = col_PB + 1
+col_ROE = col_PE + 1
 
 ShareBank = read_data(fn)
 try:
@@ -45,18 +49,13 @@ xl_row = row_start
 cnt = 0
 for i in range( len(ShareBank) ):
     s = ShareBank[i]
-    if( has_flag(s, flag) ):
+    if( has_flags(s, flag) ):
 #        print(i, '[max:', len(ShareBank), ']: ', s.nmcard(), '---flag---:', s.flag)
         ws.cell(xl_row, col_code).value = get_sina_id(s.id)
         ws.cell(xl_row, col_name).value = s.name
         ws.cell(xl_row, col_price).value = s.price
-#        ws.cell(xl_row, col_div_ratio).value = s.cp['stk_div_ratio']
-#        val = s.rt['avg_div_rate'] * s.rt['EPS_ttm'] / s.price
-#        ws.cell(xl_row, col_exp_div_ratio).value = round(val, 4)
         ws.cell(xl_row, col_adjust).value = s.rt['convert_rate']
         ws.cell(xl_row, col_last_div).value = s.rt['last_year_div']
-#        ws.cell(xl_row, col_safe_div).value = s.cp['hope_div']
-#        ws.cell(xl_row, col_safe_div_r).value = s.cp['safe_div']
         ws.cell(xl_row, col_agv_div_r).value = s.rt['avg_div_rate']
         ws.cell(xl_row, col_div_up).value = s.rt['income_up']
         ws.cell(xl_row, col_qtr_acc).value = s.rt['profit_dedt_acc']
@@ -72,6 +71,9 @@ for i in range( len(ShareBank) ):
             ws.cell(xl_row, col_grade).value = s.flag[gd_flag]
         else: 
             ws.cell(xl_row, col_grade).value = -1
+        ws.cell(xl_row, col_bps).value = s.dt['bps']
+        for k in range(5):
+            ws.cell(xl_row, col_ROE+k).value = s.dt['roe'][k+1]
         cnt += 1
         xl_row += 1
 try:
