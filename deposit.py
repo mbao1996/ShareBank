@@ -7,15 +7,15 @@ from lib import *
 fn = work_catalog + bank_name
 ShareBank = read_data(fn)
 
-flag = ['goodu', 'holding']
+flag = ['goodu', 'holding', 'attention']
 cnt = 0
-row_start = 2824    # adjustable
+row_start = 0    # adjustable
 for i in range(row_start, len(ShareBank)):
     s = ShareBank[i]
     s.raw_data.reset(s.raw_data)
     s.flag['data'] = 'right'
-#    if( has_flags(s, flag) ):
-    if( s.dt['profit_dedt_qtrs'][0] != last_qtr(get_today()) ):
+    if( has_flags(s, flag) ):
+#    if( s.dt['profit_dedt_qtrs'][0] != last_qtr(get_today()) ):
         cnt += 1
         s.name_price_fill()
         s.get_base(s)
