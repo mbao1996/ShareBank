@@ -364,7 +364,7 @@ def indicator_last_five_years(rd, s, years):
     return(roe)        
 def pft_3_years_increase(s):
     rt = ''
-    if( 'profit_dedt_years' in s.dt ):
+    if( ('profit_dedt_years' in s.dt) and (is_list_number(s.dt['profit_dedt_years'], 1)) ):
         if(s.dt['profit_dedt_years'][1] < 0):
             rt = u'亏损'
         elif(s.dt['profit_dedt_years'][4] <= 0):
