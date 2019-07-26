@@ -33,6 +33,7 @@ col_bps = col_grade + 1
 col_PB = col_bps + 1
 col_PE = col_PB + 1
 col_ROE = col_PE + 1
+col_Qtr = col_ROE + 6
 
 ShareBank = read_data(fn)
 try:
@@ -50,7 +51,7 @@ cnt = 0
 for i in range( len(ShareBank) ):
     s = ShareBank[i]
     if( has_flags(s, flag) ):
-#        print(i, '[max:', len(ShareBank), ']: ', s.nmcard(), '---flag---:', s.flag)
+        print(i, '[max:', len(ShareBank), ']: ', s.nmcard(), '---flag---:', s.flag)
         ws.cell(xl_row, col_code).value = get_sina_id(s.id)
         ws.cell(xl_row, col_name).value = s.name
         ws.cell(xl_row, col_price).value = s.price
@@ -74,6 +75,8 @@ for i in range( len(ShareBank) ):
         ws.cell(xl_row, col_bps).value = s.dt['bps']
         for k in range(5):
             ws.cell(xl_row, col_ROE+k).value = s.dt['roe'][k+1]
+        ws.cell(xl_row, col_Qtr).value = s.dt['profit_dedt_qtrs'][0]
+        
         cnt += 1
         xl_row += 1
 try:
